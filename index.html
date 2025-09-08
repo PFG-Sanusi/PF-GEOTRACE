@@ -1,0 +1,3377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a192f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>PF - GEOTRACE</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(180deg, #0a192f, #1e3a5f);
+      color: #e0e0e0;
+      overflow-x: hidden;
+    }
+    :focus-visible {
+      outline: 2px solid #00ff9f;
+      outline-offset: 2px;
+    }
+    
+    /* Tutorial/Onboarding Styles */
+    .tutorial-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      display: none;
+      backdrop-filter: blur(5px);
+    }
+    
+    .tutorial-overlay.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .tutorial-modal {
+      background: linear-gradient(135deg, rgba(30, 46, 30, 0.95), rgba(46, 74, 46, 0.95));
+      border: 2px solid rgba(0, 255, 159, 0.3);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 255, 159, 0.2);
+      backdrop-filter: blur(15px);
+      position: relative;
+    }
+    
+    .tutorial-header {
+      text-align: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(0, 255, 159, 0.2);
+      padding-bottom: 16px;
+    }
+    
+    .tutorial-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #00ff9f;
+      margin: 0 0 8px 0;
+      text-shadow: 0 0 10px rgba(0, 255, 159, 0.5);
+    }
+    
+    .tutorial-subtitle {
+      color: #b0b0b0;
+      font-size: 1em;
+      margin: 0;
+    }
+    
+    .tutorial-step {
+      display: none;
+      animation: slideIn 0.4s ease-out;
+    }
+    
+    .tutorial-step.active {
+      display: block;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .tutorial-step h3 {
+      color: #00ff9f;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3em;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .tutorial-step-icon {
+      font-size: 1.2em;
+      color: #00ff9f;
+    }
+    
+    .tutorial-content {
+      color: #e0e0e0;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    
+    .tutorial-content ul {
+      margin: 16px 0;
+      padding-left: 24px;
+    }
+    
+    .tutorial-content li {
+      margin: 8px 0;
+      color: #d4d4d4;
+    }
+    
+    .tutorial-content strong {
+      color: #00ff9f;
+      font-weight: 500;
+    }
+    
+    .tutorial-highlight {
+      background: rgba(0, 255, 159, 0.1);
+      border: 1px solid rgba(0, 255, 159, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 16px 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9em;
+      color: #00ff9f;
+    }
+    
+    .tutorial-navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      gap: 16px;
+    }
+    
+    .tutorial-btn {
+      background: linear-gradient(135deg, #00ff9f, #00b894);
+      color: #0a192f;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 500;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .tutorial-btn:hover {
+      background: linear-gradient(135deg, #00b894, #00ff9f);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 255, 159, 0.3);
+    }
+    
+    .tutorial-btn:disabled {
+      background: #3a3a3a;
+      color: #666;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .tutorial-btn.secondary {
+      background: linear-gradient(135deg, #4d79ff, #004dff);
+      color: #fff;
+    }
+    
+    .tutorial-btn.secondary:hover {
+      background: linear-gradient(135deg, #004dff, #4d79ff);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(77, 121, 255, 0.3);
+    }
+    
+    .tutorial-progress {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    
+    .tutorial-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(0, 255, 159, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .tutorial-dot.active {
+      background: #00ff9f;
+      box-shadow: 0 0 8px rgba(0, 255, 159, 0.5);
+    }
+    
+    .tutorial-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: #b0b0b0;
+      font-size: 1.5em;
+      cursor: pointer;
+      transition: color 0.3s ease;
+      padding: 8px;
+      border-radius: 50%;
+    }
+    
+    .tutorial-close:hover {
+      color: #00ff9f;
+      background: rgba(0, 255, 159, 0.1);
+    }
+    
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #00ff9f, #00b894);
+      color: #0a192f;
+      border: none;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5em;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 255, 159, 0.3);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .help-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(0, 255, 159, 0.4);
+    }
+    
+    .tutorial-feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    
+    .tutorial-feature-item {
+      background: rgba(46, 74, 46, 0.3);
+      border: 1px solid rgba(0, 255, 159, 0.2);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .tutorial-feature-item:hover {
+      background: rgba(58, 90, 58, 0.4);
+      border-color: rgba(0, 255, 159, 0.4);
+      transform: translateY(-2px);
+    }
+    
+    .tutorial-feature-icon {
+      font-size: 2em;
+      color: #00ff9f;
+      margin-bottom: 8px;
+    }
+    
+    .tutorial-feature-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9em;
+      color: #00ff9f;
+      margin: 0 0 4px 0;
+    }
+    
+    .tutorial-feature-desc {
+      font-size: 0.8em;
+      color: #b0b0b0;
+      margin: 0;
+    }
+    
+    .tutorial-warning {
+      background: rgba(255, 77, 77, 0.1);
+      border: 1px solid rgba(255, 77, 77, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 16px 0;
+      color: #ff4d4d;
+      font-size: 0.9em;
+    }
+    
+    .tutorial-tip {
+      background: rgba(77, 121, 255, 0.1);
+      border: 1px solid rgba(77, 121, 255, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 16px 0;
+      color: #4d79ff;
+      font-size: 0.9em;
+    }
+    
+    @media (max-width: 768px) {
+      .tutorial-modal {
+        padding: 24px;
+        margin: 20px;
+        max-height: 85vh;
+      }
+      
+      .tutorial-title {
+        font-size: 1.5em;
+      }
+      
+      .tutorial-navigation {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .tutorial-btn {
+        width: 100%;
+      }
+      
+      .help-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2em;
+        bottom: 15px;
+        right: 15px;
+      }
+      
+      .logo-image {
+        max-width: 250px;
+      }
+    }
+    
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    header {
+      text-align: center;
+      background: rgba(30, 46, 30, 0.8);
+      padding: 16px;
+      border-bottom: 1px solid rgba(75, 112, 75, 0.5);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      animation: slideDown 0.5s ease-out;
+      position: relative;
+      overflow: hidden; /* prevent animation spill */
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.2em;
+      font-weight: 700;
+      color: transparent;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 10px rgba(0, 255, 159, 0.35), 0 0 20px rgba(0, 255, 159, 0.2);
+      background: linear-gradient(90deg, #00ff9f, #00bcd4, #4d79ff, #00ff9f);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: gradientFlow 6s linear infinite, glowPulse 2800ms ease-in-out infinite alternate;
+      position: relative;
+      z-index: 1; /* above sweep */
+    }
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+    @keyframes glowPulse {
+      0% { text-shadow: 0 0 6px rgba(0,255,159,0.25), 0 0 12px rgba(0,255,159,0.18); }
+      100% { text-shadow: 0 0 14px rgba(0,255,159,0.6), 0 0 28px rgba(0,255,159,0.35); }
+    }
+    header::after {
+      content: "";
+      position: absolute;
+      left: -20%;
+      top: 0;
+      width: 40%;
+      height: 100%;
+      pointer-events: none;
+      background: linear-gradient(120deg, transparent 0%, rgba(0,255,159,0.12) 35%, rgba(0,255,159,0.22) 50%, rgba(0,255,159,0.12) 65%, transparent 100%);
+      filter: blur(2px);
+      transform: skewX(-12deg);
+      animation: scanSweep 4.5s linear infinite;
+      z-index: 0; /* behind text */
+    }
+    @keyframes scanSweep {
+      0% { left: -40%; }
+      100% { left: 100%; }
+    }
+    
+    /* Header Layout */
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+    }
+    
+    /* Logo Styles */
+    .logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-left: -20px;
+    }
+    
+    .logo-image {
+      max-width: 250px;
+      height: auto;
+      filter: drop-shadow(0 0 10px rgba(0, 255, 159, 0.3));
+      transition: all 0.3s ease;
+    }
+    
+    .logo-image:hover {
+      filter: drop-shadow(0 0 15px rgba(0, 255, 159, 0.5));
+      transform: scale(1.02);
+    }
+    
+    /* App Title Styles */
+    .app-title {
+      margin: 0;
+      font-size: 2.2em;
+      font-weight: 700;
+      color: transparent;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 10px rgba(0, 255, 159, 0.35), 0 0 20px rgba(0, 255, 159, 0.2);
+      background: linear-gradient(90deg, #00ff9f, #00bcd4, #4d79ff, #00ff9f);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: gradientFlow 6s linear infinite, glowPulse 2800ms ease-in-out infinite alternate;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      text-align: center;
+    }
+    #map {
+      height: 65vh;
+      max-height: 600px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 255, 159, 0.2);
+      margin: 24px 0;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 159, 0.1);
+      transition: box-shadow 0.3s ease;
+      position: relative;
+    }
+    #map:hover {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 255, 159, 0.2);
+    }
+    #map.picking-mode {
+      cursor: crosshair;
+    }
+    .controls {
+      background: rgba(30, 46, 30, 0.8);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 159, 0.1);
+      backdrop-filter: blur(10px);
+      animation: fadeInUp 0.8s ease-out;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: linear-gradient(135deg, #00ff9f, #00b894);
+      color: #0a192f;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.4s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Orbitron', sans-serif;
+    }
+    button:hover, button:focus {
+      background: linear-gradient(135deg, #00b894, #00ff9f);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 255, 159, 0.3);
+      outline: none;
+    }
+    button:disabled {
+      background: #3a3a3a;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    #selectEnemyBtn, #clearEnemyBtn {
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+      color: #fff;
+    }
+    #selectEnemyBtn:hover, #clearEnemyBtn:hover {
+      background: linear-gradient(135deg, #cc0000, #ff4d4d);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 77, 77, 0.3);
+    }
+    #toggleUnitsBtn {
+      background: linear-gradient(135deg, #4d79ff, #004dff);
+    }
+    #toggleUnitsBtn:hover {
+      background: linear-gradient(135deg, #004dff, #4d79ff);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(77, 121, 255, 0.3);
+    }
+    .dropdown {
+      margin-bottom: 20px;
+      animation: fadeIn 1.2s ease-in-out;
+    }
+    .dropdown label {
+      font-weight: 500;
+      color: #d4d4d4;
+      margin-right: 12px;
+      font-size: 1.1em;
+    }
+    .dropdown select {
+      background: rgba(46, 74, 46, 0.7);
+      color: #fff;
+      border: 1px solid rgba(0, 255, 159, 0.3);
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .dropdown select:hover, .dropdown select:focus {
+      background: rgba(58, 90, 58, 0.8);
+      border-color: #00ff9f;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 255, 159, 0.2);
+      outline: none;
+    }
+    .output {
+      margin-top: 20px;
+      background: rgba(37, 47, 37, 0.8);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 255, 159, 0.1);
+      backdrop-filter: blur(5px);
+    }
+    .output h3 {
+      margin: 0 0 12px;
+      font-size: 1.4em;
+      font-weight: 500;
+      color: #00ff9f;
+      text-shadow: 0 0 5px rgba(0, 255, 159, 0.3);
+      font-family: 'Orbitron', sans-serif;
+    }
+    .coord-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 8px 0;
+      padding: 12px;
+      background: rgba(46, 74, 46, 0.5);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .coord-line:hover {
+      background: rgba(58, 90, 58, 0.7);
+      transform: translateX(5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 255, 159, 0.2);
+    }
+    .coord-line strong {
+      font-weight: 500;
+      color: #00ff9f;
+    }
+    .coord-line span {
+      font-weight: 400;
+      color: #d4d4d4;
+    }
+    .copy-btn {
+      background: linear-gradient(135deg, #00ff9f, #00b894);
+      color: #0a192f;
+      font-size: 0.9em;
+      padding: 6px 12px;
+      margin-left: 8px;
+      border-radius: 6px;
+      border: none;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .copy-btn:hover {
+      background: linear-gradient(135deg, #00b894, #00ff9f);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 255, 159, 0.3);
+    }
+    .copy-btn.copied {
+      background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    }
+    .copy-btn.copied::before {
+      content: '✓';
+      margin-right: 4px;
+    }
+    .copy-all-btn {
+      background: linear-gradient(135deg, #4d79ff, #004dff);
+      color: #fff;
+      font-size: 0.9em;
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      transition: all 0.3s ease;
+      margin-top: 12px;
+      width: 100%;
+      max-width: 200px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .copy-all-btn:hover {
+      background: linear-gradient(135deg, #004dff, #4d79ff);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(77, 121, 255, 0.3);
+    }
+    .copy-all-btn.copied {
+      background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    }
+    .copy-all-btn.copied::before {
+      content: '✓';
+      margin-right: 4px;
+    }
+    .error, .status {
+      font-weight: 500;
+      margin-top: 12px;
+      font-size: 0.95em;
+      transition: opacity 0.3s ease;
+    }
+    .error {
+      color: #ff4d4d;
+    }
+    .status {
+      color: #b0b0b0;
+    }
+    .leaflet-control-geocoder {
+      background: rgba(30, 46, 30, 0.8);
+      border: 1px solid rgba(0, 255, 159, 0.3);
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 255, 159, 0.2);
+    }
+    .leaflet-control-geocoder-form input {
+      background: rgba(46, 74, 46, 0.7);
+      color: #fff;
+      border: none;
+      padding: 8px;
+      font-size: 0.9em;
+      font-family: 'Roboto', sans-serif;
+      border-radius: 6px;
+      width: 200px;
+      transition: all 0.3s ease;
+    }
+    .leaflet-control-geocoder-form input:focus {
+      background: rgba(58, 90, 58, 0.8);
+      outline: none;
+      border: 1px solid #00ff9f;
+      box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+    }
+    .leaflet-control-geocoder-form button {
+      background: linear-gradient(135deg, #00ff9f, #00b894);
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    .leaflet-control-geocoder-form button:hover {
+      background: linear-gradient(135deg, #00b894, #00ff9f);
+      box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+    }
+    .leaflet-control-geocoder-results {
+      background: rgba(46, 74, 46, 0.8);
+      color: #e0e0e0;
+      border: 1px solid rgba(0, 255, 159, 0.3);
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .leaflet-control-geocoder-results a {
+      color: #d4d4d4;
+      font-size: 0.9em;
+      transition: background 0.3s ease;
+    }
+    .leaflet-control-geocoder-results a:hover {
+      background: rgba(58, 90, 58, 0.8);
+    }
+   #toolbar {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  width: 250px;
+  background: rgba(30, 46, 30, 0.8);
+  padding: 16px;
+  border-right: 1px solid rgba(75, 112, 75, 0.5);
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 255, 159, 0.1);
+  transition: transform 0.5s ease;
+  z-index: 1000;
+  border-radius: 0 12px 12px 0;
+  backdrop-filter: blur(10px);
+  transform: translate(0, -50%);
+}
+#toolbar.hidden {
+  transform: translate(-250px, -50%);
+}
+    #toggleToolbarBtn {
+  position: fixed;
+  left: 250px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #00ff9f, #00b894);
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 0 8px 8px 0;
+  transition: left 0.5s ease, transform 0.3s ease;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+#toolbar.hidden #toggleToolbarBtn {
+  left: 0;
+}
+    #toggleToolbarBtn i {
+      transition: transform 0.3s ease;
+    }
+    #toolbar.hidden #toggleToolbarBtn i {
+      transform: rotate(180deg);
+    }
+    .toolbar-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .buffer-panel, .marker-panel {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    .buffer-panel.active, .marker-panel.active {
+      display: flex;
+    }
+    .buffer-panel label, .marker-panel label {
+      color: #d4d4d4;
+      font-size: 0.9em;
+    }
+    .buffer-panel input, .buffer-panel select, .marker-panel select, .marker-panel input {
+      background: rgba(46, 74, 46, 0.7);
+      color: #fff;
+      border: 1px solid rgba(0, 255, 159, 0.3);
+      padding: 8px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    .buffer-panel input:hover, .buffer-panel select:hover, .marker-panel select:hover, .marker-panel input:hover {
+      border-color: #00ff9f;
+      box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+    }
+    .buffer-panel input[type="range"] {
+      width: 100%;
+    }
+    #clearBuffersBtn {
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+    }
+    
+    /* Measurement Widget Styles */
+    .measurement-widget {
+      background: rgba(37, 47, 37, 0.9);
+      border: 1px solid #00ff9f;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .measurement-widget h4 {
+      margin: 0 0 10px;
+      color: #00ff9f;
+      font-size: 1.1em;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .measurement-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .measurement-btn {
+      background: linear-gradient(135deg, #1a4d3a, #2d5a47);
+      border: 1px solid #00ff9f;
+      color: #00ff9f;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9em;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .measurement-btn:hover {
+      background: linear-gradient(135deg, #2d5a47, #1a4d3a);
+      box-shadow: 0 2px 8px rgba(0, 255, 159, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    .measurement-btn.active {
+      background: linear-gradient(135deg, #00ff9f, #00cc7f);
+      color: #0a192f;
+      box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
+    }
+    
+    .measurement-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #2a2a2a;
+      border-color: #555;
+    }
+    
+    .measurement-info {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 0.85em;
+    }
+    
+    .measurement-info h5 {
+      margin: 0 0 8px;
+      color: #00ff9f;
+      font-size: 0.9em;
+    }
+    
+    .measurement-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 0.8em;
+    }
+    
+    .measurement-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 8px;
+      background: rgba(0, 255, 159, 0.1);
+      border-radius: 4px;
+      border: 1px solid rgba(0, 255, 159, 0.2);
+    }
+    
+    .measurement-stat-label {
+      color: #ccc;
+    }
+    
+    .measurement-stat-value {
+      color: #00ff9f;
+      font-weight: 500;
+    }
+    
+    .measurement-snap-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+    
+    .measurement-snap-toggle input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #00ff9f;
+    }
+    
+    .measurement-snap-toggle label {
+      color: #ccc;
+      font-size: 0.85em;
+      cursor: pointer;
+    }
+    
+    /* Measurement Line Styles */
+    .measurement-line {
+      stroke: #00ff9f;
+      stroke-width: 3;
+      stroke-dasharray: 5, 5;
+      fill: none;
+      filter: drop-shadow(0 0 3px rgba(0, 255, 159, 0.5));
+    }
+    
+    .measurement-line.active {
+      stroke: #ff6b6b;
+      stroke-dasharray: none;
+      stroke-width: 4;
+      filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.7));
+    }
+    
+    .measurement-point {
+      fill: #00ff9f;
+      stroke: #0a192f;
+      stroke-width: 2;
+      r: 6;
+      filter: drop-shadow(0 0 3px rgba(0, 255, 159, 0.5));
+    }
+    
+    .measurement-point.active {
+      fill: #ff6b6b;
+      r: 8;
+      filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.7));
+    }
+    
+    .measurement-label {
+      fill: #00ff9f;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+      pointer-events: none;
+    }
+    
+    .measurement-label.active {
+      fill: #ff6b6b;
+    }
+    
+    /* Marker Snapping Indicator */
+    .marker-snap-indicator {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #00ff9f;
+      border-radius: 50%;
+      background: rgba(0, 255, 159, 0.2);
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Measurement Tooltip */
+    .measurement-tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.9);
+      color: #00ff9f;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #00ff9f;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 1001;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+    }
+    
+    .measurement-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #00ff9f;
+    }
+    #clearBuffersBtn:hover {
+      background: linear-gradient(135deg, #cc0000, #ff4d4d);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 77, 77, 0.3);
+    }
+    .leaflet-popup-content-wrapper {
+      background: rgba(46, 74, 46, 0.9);
+      color: #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+    .leaflet-popup-tip {
+      background: rgba(46, 74, 46, 0.9);
+    }
+    /* Respect reduced motion preferences (battery and accessibility) */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+    /* Avoid hover-only effects on touch devices */
+    @media (hover: none) {
+      button:hover, button:focus {
+        transform: none;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      }
+      .coord-line:hover {
+        transform: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+    }
+    @media (max-width: 768px) {
+      #map {
+        height: 50vh;
+      }
+      #gpsAccuracyIndicator {
+        left: 10px;
+        padding: 8px 12px;
+        font-size: 0.8em;
+        min-width: 100px;
+      }
+             #compassWidget {
+         right: 10px;
+         bottom: 70px;
+         width: 60px;
+         height: 60px;
+       }
+      .compass-direction {
+        font-size: 0.7em;
+      }
+      .compass-needle {
+        height: 25px;
+      }
+      .compass-bearing {
+        font-size: 0.6em;
+        bottom: -20px;
+      }
+      .container {
+        padding: 16px;
+      }
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+      .logo-container {
+        justify-content: center;
+      }
+      .app-title {
+        text-align: center;
+        font-size: clamp(1.5rem, 4.5vw, 2rem);
+      }
+      button, .copy-btn, .copy-all-btn {
+        padding: 10px 16px;
+        font-size: 0.9em;
+      }
+      .dropdown select {
+        width: 100%;
+        padding: 8px;
+        font-size: 0.9em;
+      }
+      .coord-line {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .copy-btn {
+        width: 100%;
+        max-width: 120px;
+        justify-content: center;
+      }
+      .leaflet-control-geocoder-form input {
+        width: 150px;
+      }
+      #toolbar {
+        width: 200px;
+      }
+      #toggleToolbarBtn {
+        left: 200px;
+      }
+      #toolbar.hidden #toggleToolbarBtn {
+        left: 0;
+      }
+    }
+    @media (max-width: 480px) {
+      .app-title {
+        font-size: clamp(1.25rem, 6vw, 1.8rem);
+      }
+      .logo-image {
+        max-width: 200px;
+      }
+      #gpsAccuracyIndicator {
+        left: 8px;
+        padding: 6px 10px;
+        font-size: 0.75em;
+        min-width: 90px;
+      }
+             #compassWidget {
+         right: 8px;
+         bottom: 60px;
+         width: 50px;
+         height: 50px;
+       }
+      .compass-direction {
+        font-size: 0.6em;
+      }
+      .compass-needle {
+        height: 20px;
+      }
+      .compass-bearing {
+        font-size: 0.5em;
+        bottom: -18px;
+      }
+      .button-group {
+        flex-direction: column;
+      }
+      button, .copy-all-btn {
+        width: 100%;
+      }
+      .leaflet-control-geocoder-form input {
+        width: 120px;
+      }
+      #toolbar {
+        width: 180px;
+      }
+      #toggleToolbarBtn {
+        left: 180px;
+      }
+      #toolbar.hidden #toggleToolbarBtn {
+        left: 0;
+      }
+    }
+    /* Floating show-toolbar button (appears when toolbar is hidden) */
+    #showToolbarBtn {
+      position: fixed;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: linear-gradient(135deg, #00ff9f, #00b894);
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 0 8px 8px 0;
+      transition: transform 0.3s ease;
+      box-shadow: 2px 0 4px rgba(0, 0, 0, 0.3);
+      z-index: 1002;
+      display: none;
+    }
+    #showToolbarBtn i {
+      transition: transform 0.3s ease;
+    }
+    
+    /* GPS Accuracy Indicator */
+    #gpsAccuracyIndicator {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(30, 46, 30, 0.9);
+      border: 1px solid rgba(0, 255, 159, 0.2);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #e0e0e0;
+      font-size: 0.9em;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 6px rgba(0, 255, 159, 0.1);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      display: none;
+      transition: all 0.3s ease;
+      min-width: 100px;
+      text-align: center;
+    }
+    
+    #gpsAccuracyIndicator.visible {
+      display: block;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    #gpsAccuracyIndicator .accuracy-value {
+      color: #00ff9f;
+      font-weight: 700;
+      font-size: 1.1em;
+      text-shadow: 0 0 5px rgba(0, 255, 159, 0.3);
+    }
+    
+    #gpsAccuracyIndicator .accuracy-label {
+      color: #b0b0b0;
+      font-size: 0.8em;
+      margin-top: 4px;
+    }
+    
+    #gpsAccuracyIndicator .accuracy-icon {
+      margin-right: 8px;
+      color: #00ff9f;
+    }
+
+         /* Compass Widget */
+     #compassWidget {
+       position: absolute;
+       right: 20px;
+       bottom: 80px;
+       width: 80px;
+       height: 80px;
+       background: rgba(30, 46, 30, 0.9);
+       border: 2px solid rgba(0, 255, 159, 0.3);
+       border-radius: 50%;
+       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 255, 159, 0.2);
+       backdrop-filter: blur(10px);
+       z-index: 1000;
+       display: none;
+       transition: all 0.3s ease;
+     }
+    
+    #compassWidget.visible {
+      display: block;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+         /* Removed hover effect since compass is no longer clickable */
+     /* #compassWidget:hover {
+       border-color: rgba(0, 255, 159, 0.6);
+       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 159, 0.3);
+       transform: scale(1.05);
+     } */
+    
+    .compass-rose {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+    
+    .compass-direction {
+      position: absolute;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.8em;
+      color: #00ff9f;
+      text-shadow: 0 0 5px rgba(0, 255, 159, 0.5);
+      transform-origin: center;
+    }
+    
+    .compass-north {
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ff4d4d;
+      font-weight: 900;
+    }
+    
+    .compass-east {
+      top: 50%;
+      right: 5px;
+      transform: translateY(-50%);
+    }
+    
+    .compass-south {
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .compass-west {
+      top: 50%;
+      left: 5px;
+      transform: translateY(-50%);
+    }
+    
+    .compass-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      background: #00ff9f;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0, 255, 159, 0.6);
+    }
+    
+    .compass-needle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 2px;
+      height: 30px;
+      background: linear-gradient(to bottom, #ff4d4d 0%, #ff4d4d 50%, #00ff9f 50%, #00ff9f 100%);
+      transform-origin: center;
+      border-radius: 1px;
+      box-shadow: 0 0 4px rgba(0, 255, 159, 0.4);
+    }
+    
+    .compass-bearing {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65em;
+      color: #00ff9f;
+      text-shadow: 0 0 3px rgba(0, 255, 159, 0.5);
+      white-space: nowrap;
+      min-width: 60px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <div class="logo-container">
+          <img src="https://raw.githubusercontent.com/PFG-Sanusi/PF---GEOTRACE/main/Proforce-Galaxies-Logo-white-1024x241.webp" alt="Proforce Galaxies Logo" class="logo-image">
+        </div>
+        <h1 class="app-title">PF - GEOTRACE</h1>
+      </div>
+    </header>
+    <div id="map">
+      <div id="gpsAccuracyIndicator">
+        <i class="fas fa-crosshairs accuracy-icon"></i>
+        <div class="accuracy-value">±0m</div>
+        <div class="accuracy-label">GPS Accuracy</div>
+      </div>
+             <div id="compassWidget">
+        <div class="compass-rose">
+          <div class="compass-direction compass-north">N</div>
+          <div class="compass-direction compass-east">E</div>
+          <div class="compass-direction compass-south">S</div>
+          <div class="compass-direction compass-west">W</div>
+          <div class="compass-center"></div>
+          <div class="compass-needle"></div>
+        </div>
+        <div class="compass-bearing">0°</div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="button-group">
+        <button id="getLocationBtn" aria-label="Toggle location tracking"><i class="fas fa-map-marker-alt"></i> Start Tracking Location</button>
+        <button id="selectEnemyBtn" aria-label="Select marker coordinates"><i class="fas fa-crosshairs"></i> Select Marker</button>
+        <button id="clearEnemyBtn" aria-label="Clear markers"><i class="fas fa-trash-alt"></i> Clear Markers</button>
+        <button id="centerBtn" aria-label="Center map on current location"><i class="fas fa-compass"></i> Center on Me</button>
+        <button id="exportBtnIn" aria-label="Export coordinates"><i class="fas fa-file-export"></i> Export Coordinates</button>
+        <button id="toggleUnitsBtn" aria-label="Toggle distance units"><i class="fas fa-ruler"></i> Toggle Units (km/mi)</button>
+      </div>
+      <div class="dropdown">
+        <label for="enemySelect">Select Marker:</label>
+        <select id="enemySelect" aria-label="Select marker">
+          <option value="">Select a marker...</option>
+        </select>
+      </div>
+      <div class="output">
+        <h3>Coordinates</h3>
+        <div class="coord-line"><strong>MGRS:</strong> <span id="mgrsOutput">N/A</span> <button class="copy-btn" data-target="mgrsOutput" aria-label="Copy MGRS coordinates"><i class="fas fa-copy"></i> Copy</button></div>
+        <div class="coord-line"><strong>Lat/Long:</strong> <span id="latLonOutput">N/A</span> <button class="copy-btn" data-target="latLonOutput" aria-label="Copy Lat/Long coordinates"><i class="fas fa-copy"></i> Copy</button></div>
+        <div class="coord-line"><strong>DMS:</strong> <span id="dmsOutput">N/A</span> <button class="copy-btn" data-target="dmsOutput" aria-label="Copy DMS coordinates"><i class="fas fa-copy"></i> Copy</button></div>
+        <div class="coord-line"><strong>UTM:</strong> <span id="utmOutput">N/A</span> <button class="copy-btn" data-target="utmOutput" aria-label="Copy UTM coordinates"><i class="fas fa-copy"></i> Copy</button></div>
+        <div class="coord-line"><strong>Altitude (ASL):</strong> <span id="altitudeOutput">N/A</span> <button class="copy-btn" data-target="altitudeOutput" aria-label="Copy ASL Altitude"><i class="fas fa-copy"></i> Copy</button></div>
+        <div class="coord-line"><strong>Height (AGL):</strong> <span id="aglOutput">N/A</span> <button class="copy-btn" data-target="aglOutput" aria-label="Copy AGL Height"><i class="fas fa-copy"></i> Copy</button></div>
+        <div class="coord-line"><strong>Distance:</strong> <span id="distanceOutput">N/A</span> <button class="copy-btn" data-target="distanceOutput" aria-label="Copy Distance"><i class="fas fa-copy"></i> Copy</button></div>
+        <div class="coord-line"><strong>Accuracy:</strong> <span id="accuracyOutput">N/A</span></div>
+        <div class="coord-line"><strong>Last Updated:</strong> <span id="timestampOutput">N/A</span></div>
+        <button class="copy-all-btn" id="copyAllBtn" aria-label="Copy all coordinates"><i class="fas fa-copy"></i> Copy All Coordinates</button>
+        <p class="status" id="statusOutput"></p>
+        <p class="error" id="errorOutput"></p>
+      </div>
+    </div>
+  </div>
+  <div id="toolbar">
+    <button id="toggleToolbarBtn"><i class="fas fa-angle-right"></i></button>
+    <div class="toolbar-content">
+      <button id="createBufferBtn"><i class="fas fa-draw-polygon"></i> Create Buffer</button>
+      <div class="buffer-panel" id="bufferPanel">
+        <label for="bufferLocation">Select Location:</label>
+        <select id="bufferLocation">
+          <option value="">Select...</option>
+          <option value="self">My Location</option>
+        </select>
+        <label for="bufferRadius">Radius:</label>
+        <input type="number" id="bufferRadius" min="0" step="any" placeholder="Enter radius">
+        <select id="bufferUnit">
+          <option value="m">Meters (m)</option>
+          <option value="km">Kilometers (km)</option>
+          <option value="mi">Miles (mi)</option>
+        </select>
+        <label for="bufferOpacity">Opacity (0-1):</label>
+        <input type="range" id="bufferOpacity" min="0" max="1" step="0.1" value="0.5">
+        <span id="opacityValue">0.5</span>
+        <label for="bufferColor">Buffer Color:</label>
+        <select id="bufferColor">
+          <option value="green">Green</option>
+          <option value="red">Red</option>
+          <option value="blue">Blue</option>
+          <option value="yellow">Yellow</option>
+        </select>
+        <button id="applyBufferBtn"><i class="fas fa-check"></i> Apply Buffer</button>
+      </div>
+      <button id="selectMarkerBtn" style="display: none;">Select Marker Type</button>
+      <div class="marker-panel" id="markerPanel">
+        <label for="markerType">Marker Type:</label>
+        <select id="markerType">
+          <option value="enemy">Enemy (Red)</option>
+          <option value="ally">Ally (Blue)</option>
+          <option value="poi">POI (Yellow)</option>
+        </select>
+        <label for="markerName">Marker Name:</label>
+        <input type="text" id="markerName" placeholder="Enter custom name (e.g., ISIS, Base Alpha)" maxlength="50">
+        <button id="confirmMarkerBtn"><i class="fas fa-check"></i> Confirm Type</button>
+      </div>
+      <button id="clearBuffersBtn"><i class="fas fa-trash-alt"></i> Clear Buffers</button>
+      
+      <!-- Measurement Widget -->
+      <div class="measurement-widget">
+        <h4><i class="fas fa-ruler"></i> Measurement Tool</h4>
+        <div class="measurement-controls">
+          <button id="startMeasurementBtn" class="measurement-btn">
+            <i class="fas fa-play"></i> Start Measurement
+          </button>
+          <button id="clearMeasurementsBtn" class="measurement-btn" disabled>
+            <i class="fas fa-eraser"></i> Clear All
+          </button>
+        </div>
+        <div class="measurement-info" id="measurementInfo" style="display: none;">
+          <h5><i class="fas fa-info-circle"></i> Current Measurement</h5>
+          <div class="measurement-stats">
+            <div class="measurement-stat">
+              <span class="measurement-stat-label">Distance:</span>
+              <span class="measurement-stat-value" id="currentDistance">0 m</span>
+            </div>
+            <div class="measurement-stat">
+              <span class="measurement-stat-label">Points:</span>
+              <span class="measurement-stat-value" id="pointCount">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button id="showToolbarBtn" aria-label="Show toolbar"><i class="fas fa-angle-right"></i></button>
+
+  <!-- Measurement Elements -->
+  <div id="markerSnapIndicator" class="marker-snap-indicator"></div>
+  <div id="measurementTooltip" class="measurement-tooltip" style="display: none;"></div>
+
+  <!-- Tutorial/Help System -->
+  <button id="helpBtn" class="help-btn" aria-label="Help and Tutorial" title="Help & Tutorial">
+    <i class="fas fa-question"></i>
+  </button>
+
+  <div id="tutorialOverlay" class="tutorial-overlay">
+    <div class="tutorial-modal">
+      <button id="tutorialClose" class="tutorial-close" aria-label="Close tutorial">
+        <i class="fas fa-times"></i>
+      </button>
+      
+      <div class="tutorial-header">
+        <h1 class="tutorial-title">PF - GEOTRACE Tutorial</h1>
+        <p class="tutorial-subtitle">Master the art of precision geolocation tracking</p>
+      </div>
+
+      <!-- Step 1: Welcome -->
+      <div id="step1" class="tutorial-step active">
+        <h3><i class="fas fa-rocket tutorial-step-icon"></i>Welcome to GEOTRACE</h3>
+        <div class="tutorial-content">
+          <p>Welcome to <strong>PF - GEOTRACE</strong>, your advanced geolocation tracking and mapping solution. This tutorial will guide you through all the essential features to help you become proficient with the application.</p>
+          
+          <div class="tutorial-highlight">
+            <strong>What you'll learn:</strong>
+            <ul>
+              <li>GPS tracking and location monitoring</li>
+              <li>Marker placement and management</li>
+              <li>Precision measurement tool</li>
+              <li>Buffer creation and analysis</li>
+              <li>Coordinate systems and conversions</li>
+              <li>Advanced mapping features</li>
+            </ul>
+          </div>
+          
+          <div class="tutorial-tip">
+            <i class="fas fa-lightbulb"></i> <strong>Pro Tip:</strong> You can access this tutorial anytime by clicking the help button (?) in the bottom-right corner.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: GPS Tracking -->
+      <div id="step2" class="tutorial-step">
+        <h3><i class="fas fa-map-marker-alt tutorial-step-icon"></i>GPS Location Tracking</h3>
+        <div class="tutorial-content">
+          <p>The core feature of GEOTRACE is real-time GPS tracking. Here's how to get started:</p>
+          
+          <ul>
+            <li><strong>Start Tracking:</strong> Click the "Start Tracking Location" button to begin GPS monitoring</li>
+            <li><strong>GPS Accuracy:</strong> Monitor your location accuracy with the real-time indicator</li>
+            <li><strong>Compass Widget:</strong> View your heading and direction with the interactive compass</li>
+            <li><strong>Auto-Centering:</strong> Use "Center on Me" to quickly return to your current position</li>
+          </ul>
+          
+          <div class="tutorial-warning">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> Allow location access when prompted by your browser for GPS tracking to work.
+          </div>
+          
+          <div class="tutorial-highlight">
+            <strong>GPS Features:</strong>
+            <ul>
+              <li>Real-time coordinate updates</li>
+              <li>Altitude and AGL (Above Ground Level) calculations</li>
+              <li>Movement tracking and heading detection</li>
+              <li>Accuracy monitoring and feedback</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Marker System -->
+      <div id="step3" class="tutorial-step">
+        <h3><i class="fas fa-crosshairs tutorial-step-icon"></i>Marker Placement System</h3>
+        <div class="tutorial-content">
+          <p>GEOTRACE uses a sophisticated marker system for point-of-interest tracking:</p>
+          
+          <div class="tutorial-feature-list">
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-skull"></i></div>
+              <div class="tutorial-feature-title">Enemy Markers</div>
+              <div class="tutorial-feature-desc">Red markers for hostile positions</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-shield-alt"></i></div>
+              <div class="tutorial-feature-title">Ally Markers</div>
+              <div class="tutorial-feature-desc">Blue markers for friendly positions</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-map-pin"></i></div>
+              <div class="tutorial-feature-title">POI Markers</div>
+              <div class="tutorial-feature-desc">Yellow markers for points of interest</div>
+            </div>
+          </div>
+          
+          <p><strong>How to place markers:</strong></p>
+          <ol>
+            <li>Click "Select Marker" button</li>
+            <li>Choose marker type (Enemy/Ally/POI)</li>
+            <li>Enter a custom name (optional, e.g., "ISIS", "Base Alpha")</li>
+            <li>Click "Confirm Type"</li>
+            <li>Click anywhere on the map to place the marker</li>
+          </ol>
+          
+          <div class="tutorial-tip">
+            <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Markers are automatically saved and will persist between sessions. Custom names help you identify specific locations quickly.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Measurement Tool -->
+      <div id="step4" class="tutorial-step">
+        <h3><i class="fas fa-ruler tutorial-step-icon"></i>Precision Measurement Tool</h3>
+        <div class="tutorial-content">
+          <p>The Measurement Tool allows you to create precise distance measurements between points on the map:</p>
+          
+          <div class="tutorial-feature-list">
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-crosshairs"></i></div>
+              <div class="tutorial-feature-title">Marker-to-Marker</div>
+              <div class="tutorial-feature-desc">Click directly on markers for exact measurements</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-map-marker-alt"></i></div>
+              <div class="tutorial-feature-title">Custom Points</div>
+              <div class="tutorial-feature-desc">Click anywhere on the map for custom measurement points</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-calculator"></i></div>
+              <div class="tutorial-feature-title">Real-time Distance</div>
+              <div class="tutorial-feature-desc">See distances update as you add points</div>
+            </div>
+          </div>
+          
+          <p><strong>How to use the Measurement Tool:</strong></p>
+          <ol>
+            <li>Click "Start Measurement" button in the toolbar</li>
+            <li>Click directly on any marker for precise starting point</li>
+            <li>Click on another marker or map location for next point</li>
+            <li>Continue adding points to create a measurement path</li>
+            <li>View real-time distance calculations and point count</li>
+            <li>Click "Stop Measurement" when finished</li>
+            <li>Use "Clear All" to remove all measurements</li>
+          </ol>
+          
+          <div class="tutorial-highlight">
+            <strong>Measurement Features:</strong>
+            <ul>
+              <li>Pixel-perfect marker-to-marker distances</li>
+              <li>Multi-point path measurements</li>
+              <li>Automatic distance labeling on lines</li>
+              <li>Point numbering for easy reference</li>
+              <li>Total distance calculation</li>
+            </ul>
+          </div>
+          
+          <div class="tutorial-tip">
+            <i class="fas fa-lightbulb"></i> <strong>Pro Tip:</strong> For maximum accuracy, always click directly on markers rather than near them. This ensures you get the exact marker coordinates for precise tactical measurements.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Buffer System -->
+      <div id="step5" class="tutorial-step">
+        <h3><i class="fas fa-draw-polygon tutorial-step-icon"></i>Buffer Creation & Analysis</h3>
+        <div class="tutorial-content">
+          <p>Create circular buffers around any location for area analysis and planning:</p>
+          
+          <ul>
+            <li><strong>Buffer Location:</strong> Choose from your current position or any placed marker</li>
+            <li><strong>Radius Control:</strong> Set buffer size in meters, kilometers, or miles</li>
+            <li><strong>Visual Customization:</strong> Adjust color and opacity for different scenarios</li>
+            <li><strong>Multiple Buffers:</strong> Create several buffers for complex analysis</li>
+          </ul>
+          
+          <div class="tutorial-highlight">
+            <strong>Buffer Applications:</strong>
+            <ul>
+              <li>Range analysis for equipment or weapons</li>
+              <li>Coverage area planning</li>
+              <li>Safety zone establishment</li>
+              <li>Operational area definition</li>
+            </ul>
+          </div>
+          
+          <div class="tutorial-tip">
+            <i class="fas fa-lightbulb"></i> <strong>Pro Tip:</strong> Use different colors for different buffer types (red for danger zones, green for safe areas, etc.).
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6: Coordinate Systems -->
+      <div id="step6" class="tutorial-step">
+        <h3><i class="fas fa-globe tutorial-step-icon"></i>Coordinate Systems & Conversions</h3>
+        <div class="tutorial-content">
+          <p>GEOTRACE supports multiple coordinate systems for maximum compatibility:</p>
+          
+          <div class="tutorial-feature-list">
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-hashtag"></i></div>
+              <div class="tutorial-feature-title">MGRS</div>
+              <div class="tutorial-feature-desc">Military Grid Reference System</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-compass"></i></div>
+              <div class="tutorial-feature-title">Lat/Long</div>
+              <div class="tutorial-feature-desc">Decimal degrees format</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-ruler"></i></div>
+              <div class="tutorial-feature-title">DMS</div>
+              <div class="tutorial-feature-desc">Degrees, Minutes, Seconds</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-map"></i></div>
+              <div class="tutorial-feature-title">UTM</div>
+              <div class="tutorial-feature-desc">Universal Transverse Mercator</div>
+            </div>
+          </div>
+          
+          <p><strong>Features:</strong></p>
+          <ul>
+            <li>One-click copying of any coordinate format</li>
+            <li>Automatic conversion between all systems</li>
+            <li>Distance calculations in kilometers or miles</li>
+            <li>Export functionality for data analysis</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Step 7: Advanced Features -->
+      <div id="step7" class="tutorial-step">
+        <h3><i class="fas fa-cogs tutorial-step-icon"></i>Advanced Features & Tips</h3>
+        <div class="tutorial-content">
+          <p>Master these advanced features to maximize your GEOTRACE experience:</p>
+          
+          <ul>
+            <li><strong>Map Layers:</strong> Switch between satellite, terrain, and street maps</li>
+            <li><strong>Search Function:</strong> Search by place names, coordinates, or MGRS codes</li>
+            <li><strong>Toolbar:</strong> Access advanced tools via the collapsible sidebar</li>
+            <li><strong>Export Data:</strong> Download marker coordinates as CSV files</li>
+            <li><strong>Unit Toggle:</strong> Switch between metric and imperial units</li>
+          </ul>
+          
+          <div class="tutorial-highlight">
+            <strong>Keyboard Shortcuts:</strong>
+            <ul>
+              <li><strong>Space:</strong> Toggle GPS tracking</li>
+              <li><strong>Escape:</strong> Cancel marker placement</li>
+              <li><strong>Ctrl+C:</strong> Copy selected coordinates</li>
+            </ul>
+          </div>
+          
+          <div class="tutorial-warning">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Security Note:</strong> Always ensure you have proper authorization before tracking locations in sensitive areas.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8: Getting Started -->
+      <div id="step8" class="tutorial-step">
+        <h3><i class="fas fa-play tutorial-step-icon"></i>Ready to Start</h3>
+        <div class="tutorial-content">
+          <p>You're now ready to use GEOTRACE effectively! Here's a quick checklist to get started:</p>
+          
+          <div class="tutorial-highlight">
+            <strong>Quick Start Checklist:</strong>
+            <ol>
+              <li>Allow location access when prompted</li>
+              <li>Click "Start Tracking Location" to begin GPS monitoring</li>
+              <li>Familiarize yourself with the coordinate display panel</li>
+              <li>Try placing a marker to test the system</li>
+              <li>Test the measurement tool for distance calculations</li>
+              <li>Experiment with different map layers</li>
+              <li>Create a buffer around your location</li>
+            </ol>
+          </div>
+          
+          <div class="tutorial-tip">
+            <i class="fas fa-lightbulb"></i> <strong>Remember:</strong> You can always return to this tutorial by clicking the help button. Practice makes perfect!
+          </div>
+          
+          <p>GEOTRACE is designed to be intuitive and powerful. Take your time exploring the features, and don't hesitate to experiment with different settings and configurations.</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="tutorial-progress">
+        <div class="tutorial-dot active" data-step="1"></div>
+        <div class="tutorial-dot" data-step="2"></div>
+        <div class="tutorial-dot" data-step="3"></div>
+        <div class="tutorial-dot" data-step="4"></div>
+        <div class="tutorial-dot" data-step="5"></div>
+        <div class="tutorial-dot" data-step="6"></div>
+        <div class="tutorial-dot" data-step="7"></div>
+        <div class="tutorial-dot" data-step="8"></div>
+      </div>
+
+      <div class="tutorial-navigation">
+        <button id="tutorialPrev" class="tutorial-btn secondary" disabled>
+          <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        <button id="tutorialNext" class="tutorial-btn">
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
+        <button id="tutorialSkip" class="tutorial-btn secondary" style="display: none;">
+          Skip Tutorial
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/proj4@2.9.0/dist/proj4.js"></script>
+  <script src="https://unpkg.com/proj4-mgrs@0.1.2/dist/proj4-mgrs.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, initializing map and controls');
+      const map = L.map('map', {
+        maxZoom: 18,
+        minZoom: 3
+      }).setView([9.0765, 7.3986], 8);
+
+      // Basemaps
+      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 18
+      });
+      const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18
+      }).addTo(map);
+      const esriTerrain = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenTopoMap (CC-BY-SA)',
+        maxZoom: 17
+      });
+      const esriLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18
+      });
+
+      const layerControl = L.control.layers(
+        {
+          "OpenStreetMap": osmLayer,
+          "Satellite": esriSatellite,
+          "Terrain": esriTerrain
+        },
+        { "Labels": esriLabels }
+      ).addTo(map);
+
+      function getCurrentBasemapMaxZoom() {
+        const activeLayer = Object.keys(layerControl._layers).find(key => map.hasLayer(layerControl._layers[key].layer));
+        return layerControl._layers[activeLayer]?.layer?.options?.maxZoom || 18;
+      }
+
+      // Custom geocoder
+      const customGeocoder = {
+        name: 'CustomGeocoder',
+        geocode: function(query, cb, context) {
+          console.log('Geocoding query:', query);
+          query = query.trim();
+
+          const returnResults = (lat, lon, name) => {
+            cb.call(context, [{
+              center: L.latLng(lat, lon),
+              name: name || `Coordinates: ${lat.toFixed(6)}, ${lon.toFixed(6)}`,
+              bbox: L.latLngBounds([lat, lon], [lat, lon])
+            }]);
+          };
+
+          const parseMGRS = (input) => {
+            try {
+              const ll = proj4.mgrs.toPoint(input.replace(/\s+/g, ''));
+              return { lat: ll[1], lon: ll[0] };
+            } catch (e) {
+              console.error('Invalid MGRS:', input, e);
+              return null;
+            }
+          };
+
+          const parseUTM = (input) => {
+            const utmRegex = /^(\d{1,2})([A-Z])\s*(\d+\.?\d*)\s*([mM]?)\s*E\s*,?\s*(\d+\.?\d*)\s*([mM]?)\s*N$/i;
+            const match = input.match(utmRegex);
+            if (match) {
+              const zone = parseInt(match[1]);
+              const hem = match[2].toUpperCase();
+              const easting = parseFloat(match[3]);
+              const northing = parseFloat(match[5]);
+              try {
+                const utmProj = `+proj=utm +zone=${zone} +datum=WGS84 +units=m +no_defs`;
+                const [lon, lat] = proj4(utmProj, 'WGS84', [easting, northing]);
+                return { lat, lon };
+              } catch (e) {
+                console.error('Invalid UTM:', input, e);
+                return null;
+              }
+            }
+            return null;
+          };
+
+          const parseDD = (input) => {
+            const ddRegex = /^(-?\d+\.?\d*)\s*[,;]?\s*(-?\d+\.?\d*)$/;
+            const match = input.match(ddRegex);
+            if (match) {
+              const lat = parseFloat(match[1]);
+              const lon = parseFloat(match[2]);
+              if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+                return { lat, lon };
+              }
+            }
+            return null;
+          };
+
+          const parseDMS = (input) => {
+            const dmsRegex = /^(\d+)°\s*(\d+)'\s*(\d+\.?\d*)"\s*([NS])\s*[,;]?\s*(\d+)°\s*(\d+)'\s*(\d+\.?\d*)"\s*([EW])$/i;
+            const match = input.match(dmsRegex);
+            if (match) {
+              const latDeg = parseInt(match[1]);
+              const latMin = parseInt(match[2]);
+              const latSec = parseFloat(match[3]);
+              const latDir = match[4].toUpperCase();
+              const lonDeg = parseInt(match[5]);
+              const lonMin = parseInt(match[6]);
+              const lonSec = parseFloat(match[7]);
+              const lonDir = match[8].toUpperCase();
+
+              const lat = (latDeg + latMin / 60 + latSec / 3600) * (latDir === 'N' ? 1 : -1);
+              const lon = (lonDeg + lonMin / 60 + lonSec / 3600) * (lonDir === 'E' ? 1 : -1);
+
+              if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+                return { lat, lon };
+              }
+            }
+            return null;
+          };
+
+          let coords = parseMGRS(query);
+          if (coords) return returnResults(coords.lat, coords.lon, `MGRS: ${query}`);
+
+          coords = parseUTM(query);
+          if (coords) return returnResults(coords.lat, coords.lon, `UTM: ${query}`);
+
+          coords = parseDD(query);
+          if (coords) return returnResults(coords.lat, coords.lon, `DD: ${query}`);
+
+          coords = parseDMS(query);
+          if (coords) return returnResults(coords.lat, coords.lon, `DMS: ${query}`);
+
+          L.Control.Geocoder.nominatim().geocode(query, cb, context);
+        }
+      };
+
+      L.Control.geocoder({
+        defaultMarkGeocode: false,
+        placeholder: 'Search by name, MGRS, UTM, DD, or DMS...',
+        geocoder: customGeocoder,
+        position: 'topright'
+      }).on('markgeocode', function(e) {
+        console.log('Search result selected:', e.geocode);
+        const latlng = e.geocode.center;
+        const maxZoom = getCurrentBasemapMaxZoom();
+        map.flyTo(latlng, Math.min(12, maxZoom));
+        updateCoordinates(latlng.lat, latlng.lng, null, null, null, false, null);
+        document.getElementById('statusOutput').textContent = `Located: ${e.geocode.name}`;
+      }).addTo(map);
+
+      // Handle tile loading errors
+      esriSatellite.on('tileerror', () => {
+        document.getElementById('errorOutput').textContent = "Failed to load map tiles. Check your internet connection.";
+      });
+      osmLayer.on('tileerror', () => {
+        document.getElementById('errorOutput').textContent = "Failed to load map tiles. Check your internet connection.";
+      });
+      esriTerrain.on('tileerror', () => {
+        document.getElementById('errorOutput').textContent = "Failed to load map tiles. Check your internet connection.";
+      });
+
+      map.on('baselayerchange', (e) => {
+        if (e.name === 'Terrain') {
+          document.getElementById('statusOutput').textContent = 'Zoom in to see contour labels clearly';
+        } else {
+          document.getElementById('statusOutput').textContent = isTracking ? 'Tracking Active' : '';
+        }
+      });
+
+      L.control.scale({ position: 'bottomleft', metric: true, imperial: true }).addTo(map);
+
+      let gpsMarker = null;
+      const markerLayer = L.layerGroup().addTo(map);
+      const bufferLayer = L.layerGroup().addTo(map);
+      let enemyCounter = 0;
+      let allyCounter = 0;
+      let poiCounter = 0;
+      let markers = [];
+      let currentUserLocation = null;
+      let lastUserLocation = null;
+      let lastValidAltitude = null;
+      let lastValidAGL = null;
+      let isDropdownOpen = false;
+      let isBufferDropdownOpen = false;
+      let distanceUnit = 'km';
+      let lastDropdownUpdate = 0;
+      let lastGpsUpdate = 0;
+      let lastBufferDropdownUpdate = 0;
+      let lastHeading = null;
+      let headingHistory = [];
+
+      const markerIcons = {
+        enemy: new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        }),
+        ally: new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        }),
+        poi: new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        }),
+        user: new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+      };
+
+      const getLocationBtn = document.getElementById('getLocationBtn');
+      const selectEnemyBtn = document.getElementById('selectEnemyBtn');
+      const clearEnemyBtn = document.getElementById('clearEnemyBtn');
+      const centerBtn = document.getElementById('centerBtn');
+      const exportBtnIn = document.getElementById('exportBtnIn');
+      const toggleUnitsBtn = document.getElementById('toggleUnitsBtn');
+      const enemySelect = document.getElementById('enemySelect');
+      const errorOutput = document.getElementById('errorOutput');
+      const statusOutput = document.getElementById('statusOutput');
+
+      // Toolbar elements
+      const toolbar = document.getElementById('toolbar');
+      const toggleToolbarBtn = document.getElementById('toggleToolbarBtn');
+      const showToolbarBtn = document.getElementById('showToolbarBtn');
+      const createBufferBtn = document.getElementById('createBufferBtn');
+      const bufferPanel = document.getElementById('bufferPanel');
+      const bufferLocation = document.getElementById('bufferLocation');
+      const bufferRadius = document.getElementById('bufferRadius');
+      const bufferUnit = document.getElementById('bufferUnit');
+      const bufferOpacity = document.getElementById('bufferOpacity');
+      const opacityValue = document.getElementById('opacityValue');
+      const bufferColor = document.getElementById('bufferColor');
+      const applyBufferBtn = document.getElementById('applyBufferBtn');
+      const clearBuffersBtn = document.getElementById('clearBuffersBtn');
+      const markerPanel = document.getElementById('markerPanel');
+      const markerType = document.getElementById('markerType');
+      const markerName = document.getElementById('markerName');
+      const confirmMarkerBtn = document.getElementById('confirmMarkerBtn');
+
+      let watchId = null, isTracking = false, isFirstFix = true;
+
+      if (!navigator.geolocation) {
+        errorOutput.textContent = "Geolocation is not supported by this browser.";
+        getLocationBtn.disabled = true;
+      }
+
+      enemySelect.addEventListener('mousedown', () => {
+        console.log('Marker dropdown mousedown, setting isDropdownOpen = true');
+        isDropdownOpen = true;
+      });
+      enemySelect.addEventListener('change', () => {
+        console.log('Marker dropdown changed, selected value:', enemySelect.value);
+        isDropdownOpen = false;
+      });
+      enemySelect.addEventListener('blur', () => {
+        console.log('Marker dropdown blur, setting isDropdownOpen = false');
+        isDropdownOpen = false;
+      });
+
+      bufferLocation.addEventListener('mousedown', () => {
+        console.log('Buffer dropdown mousedown, setting isBufferDropdownOpen = true');
+        isBufferDropdownOpen = true;
+      });
+      bufferLocation.addEventListener('change', () => {
+        console.log('Buffer dropdown changed, selected value:', bufferLocation.value);
+        isBufferDropdownOpen = false;
+      });
+      bufferLocation.addEventListener('blur', () => {
+        console.log('Buffer dropdown blur, setting isBufferDropdownOpen = false');
+        isBufferDropdownOpen = false;
+      });
+
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        console.log('Calculating distance:', { lat1, lon1, lat2, lon2, distanceUnit });
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        let distance = R * c;
+        if (distanceUnit === 'mi') {
+          distance *= 0.621371;
+        }
+        console.log('Distance calculated:', distance.toFixed(2), distanceUnit);
+        return distance;
+      }
+
+      function hasLocationChanged(newLat, newLon, oldLat, oldLon) {
+        const now = Date.now();
+        if (!oldLat || !oldLon) {
+          console.log('No previous location, allowing update');
+          return true;
+        }
+        const timeElapsed = now - lastGpsUpdate;
+        const distance = calculateDistance(newLat, newLon, oldLat, oldLon) * (distanceUnit === 'km' ? 1000 : 1609.34);
+        const isSignificant = distance > 10 || timeElapsed > 5000;
+        console.log('Location change check:', { newLat, newLon, oldLat, oldLon, distance, timeElapsed, isSignificant });
+        return isSignificant;
+      }
+
+      function getGeoidHeight(lat, lon) {
+        console.log('Calculating geoid height for:', { lat, lon });
+        try {
+          if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+            if (lat < 7) return 20;
+            else if (lat < 10) return 25;
+            else return 30;
+          } else {
+            throw new Error('Invalid coordinates');
+          }
+        } catch (error) {
+          console.error('Geoid height error:', error);
+          document.getElementById('errorOutput').textContent = "Failed to compute geoid height.";
+          return null;
+        }
+      }
+
+      async function getTerrainElevation(lat, lon, retries = 2, delay = 2000) {
+        const cacheKey = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+        if (elevationCache.has(cacheKey)) {
+          console.log('Returning cached elevation:', elevationCache.get(cacheKey));
+          return elevationCache.get(cacheKey);
+        }
+        console.log('Fetching terrain elevation for:', { lat, lon, retries });
+        try {
+          const response = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lon}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+          }
+          const data = await response.json();
+          if (data.results && data.results[0] && data.results[0].elevation !== undefined) {
+            const elevation = data.results[0].elevation;
+            console.log('Elevation data received:', elevation);
+            elevationCache.set(cacheKey, elevation);
+            return elevation;
+          }
+          throw new Error("Invalid elevation data");
+        } catch (error) {
+          console.error('Elevation fetch error:', error);
+          if (retries > 0) {
+            console.log(`Retrying elevation fetch, retries left: ${retries}`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return getTerrainElevation(lat, lon, retries - 1, delay * 2);
+          }
+          console.log('Using fallback elevation for:', { lat, lon });
+          const fallback = lat < 7 ? 100 : lat < 10 ? 400 : 300;
+          elevationCache.set(cacheKey, fallback);
+          return fallback;
+        }
+      }
+
+      const elevationCache = new Map();
+      
+      // GPS Accuracy Indicator functionality
+      const gpsAccuracyIndicator = document.getElementById('gpsAccuracyIndicator');
+      
+      function updateGPSAccuracyIndicator(accuracy) {
+        if (accuracy !== null && accuracy !== undefined) {
+          const accuracyValue = gpsAccuracyIndicator.querySelector('.accuracy-value');
+          accuracyValue.textContent = `±${accuracy.toFixed(1)}m`;
+          gpsAccuracyIndicator.classList.add('visible');
+        } else {
+          gpsAccuracyIndicator.classList.remove('visible');
+        }
+      }
+
+      // Compass Widget functionality
+      const compassWidget = document.getElementById('compassWidget');
+      const compassRose = compassWidget.querySelector('.compass-rose');
+      const compassNeedle = compassWidget.querySelector('.compass-needle');
+      const compassBearing = compassWidget.querySelector('.compass-bearing');
+      let currentHeading = 0;
+      let isCompassVisible = false;
+
+      function updateCompass(heading) {
+        console.log('updateCompass called with heading:', heading);
+        
+        if (heading !== null && heading !== undefined && !isNaN(heading)) {
+          currentHeading = heading;
+          
+          // Rotate the compass rose (directions stay fixed)
+          compassRose.style.transform = `rotate(${-heading}deg)`;
+          
+          // Rotate the needle to point north
+          compassNeedle.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
+          
+          // Update bearing display with both degrees and direction
+          const bearing = Math.round(heading);
+          const direction = getCardinalDirection(heading);
+          compassBearing.textContent = `${bearing}° ${direction}`;
+          
+          // Show compass if not already visible
+          if (!isCompassVisible) {
+            compassWidget.classList.add('visible');
+            isCompassVisible = true;
+            console.log('Compass made visible with heading:', heading);
+          }
+        } else {
+          // Show compass even without heading data, but with default orientation
+          if (!isCompassVisible) {
+            compassWidget.classList.add('visible');
+            isCompassVisible = true;
+            console.log('Compass made visible without heading data');
+          }
+          
+          // Reset to default orientation
+          compassRose.style.transform = `rotate(0deg)`;
+          compassNeedle.style.transform = `translate(-50%, -50%) rotate(0deg)`;
+          compassBearing.textContent = `N/A`;
+        }
+      }
+      
+      // Function to convert degrees to cardinal direction
+      function getCardinalDirection(heading) {
+        const directions = [
+          'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+          'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'
+        ];
+        const index = Math.round(heading / 22.5) % 16;
+        return directions[index];
+      }
+
+      // Remove compass toggle functionality - compass stays visible when tracking
+      // compassWidget.addEventListener('click', () => {
+      //   if (isCompassVisible) {
+      //     compassWidget.classList.remove('visible');
+      //     isCompassVisible = false;
+      //   } else if (currentHeading !== null) {
+      //     compassWidget.classList.add('visible');
+      //     isCompassVisible = true;
+      //   }
+      // });
+
+      // Calculate heading from movement between GPS points
+      function calculateHeadingFromMovement(lat1, lon1, lat2, lon2) {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+        
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const lat1Rad = lat1 * Math.PI / 180;
+        const lat2Rad = lat2 * Math.PI / 180;
+        
+        const y = Math.sin(dLon) * Math.cos(lat2Rad);
+        const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+        
+        let heading = Math.atan2(y, x) * 180 / Math.PI;
+        heading = (heading + 360) % 360; // Normalize to 0-360
+        
+        return heading;
+      }
+
+      // Smooth heading using moving average
+      function smoothHeading(newHeading) {
+        if (newHeading === null || isNaN(newHeading)) return lastHeading;
+        
+        headingHistory.push(newHeading);
+        if (headingHistory.length > 5) {
+          headingHistory.shift();
+        }
+        
+        // Calculate average heading, handling 0/360 degree wrap
+        let sumSin = 0;
+        let sumCos = 0;
+        for (let heading of headingHistory) {
+          sumSin += Math.sin(heading * Math.PI / 180);
+          sumCos += Math.cos(heading * Math.PI / 180);
+        }
+        
+        const avgHeading = Math.atan2(sumSin, sumCos) * 180 / Math.PI;
+        return (avgHeading + 360) % 360;
+      }
+
+      function loadMarkers() {
+        console.log('Loading markers from localStorage');
+        try {
+          const storedMarkers = JSON.parse(localStorage.getItem('markers') || '[]');
+          console.log('Loaded markers:', storedMarkers);
+          markers = [];
+          enemyCounter = 0;
+          allyCounter = 0;
+          poiCounter = 0;
+          storedMarkers.forEach(marker => {
+            if (marker.typeId && marker.lat && marker.lon && marker.type) {
+              const type = marker.type;
+              if (type === 'enemy') enemyCounter = Math.max(enemyCounter, marker.typeId);
+              else if (type === 'ally') allyCounter = Math.max(allyCounter, marker.typeId);
+              else if (type === 'poi') poiCounter = Math.max(poiCounter, marker.typeId);
+              const displayName = marker.name || `${type.charAt(0).toUpperCase() + type.slice(1)} ${marker.typeId}`;
+              const leafletMarker = L.marker([marker.lat, marker.lon], { icon: markerIcons[type] })
+                .bindPopup(displayName)
+                .addTo(markerLayer);
+              markers.push({ typeId: marker.typeId, lat: marker.lat, lon: marker.lon, type, marker: leafletMarker, name: marker.name, leafletMarker: leafletMarker });
+            }
+          });
+          console.log('Markers after loading:', markers);
+          updateMarkerDropdown();
+          updateBufferLocationDropdown();
+          // Setup measurement click handlers for loaded markers
+          if (typeof setupMarkerClickHandlers === 'function') {
+            setupMarkerClickHandlers();
+          }
+        } catch (error) {
+          console.error('Error loading markers:', error);
+          document.getElementById('errorOutput').textContent = "Failed to load markers.";
+        }
+      }
+
+      function saveMarker(lat, lon, typeId, type, markerName = null) {
+        console.log('Saving marker:', { lat, lon, typeId, type, name: markerName });
+        const storedMarkers = JSON.parse(localStorage.getItem('markers') || '[]');
+        storedMarkers.push({ lat, lon, typeId, type, name: markerName });
+        localStorage.setItem('markers', JSON.stringify(storedMarkers));
+      }
+
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+
+      const updateMarkerDropdown = debounce((selectedId = null) => {
+        console.log('Updating marker dropdown, selectedId:', selectedId, 'isDropdownOpen:', isDropdownOpen);
+        if (isDropdownOpen) {
+          console.log('Marker dropdown open, skipping update');
+          return;
+        }
+        const now = Date.now();
+        if (now - lastDropdownUpdate < 2000) {
+          console.log('Too soon since last marker dropdown update:', now - lastDropdownUpdate);
+          return;
+        }
+        lastDropdownUpdate = now;
+
+        console.log('Current markers:', markers);
+        console.log('Current user location:', currentUserLocation);
+
+        enemySelect.innerHTML = '<option value="">Select a marker...</option>';
+        markers.forEach(marker => {
+          const displayName = marker.name || `${marker.type.charAt(0).toUpperCase() + marker.type.slice(1)} ${marker.typeId}`;
+          let label = displayName;
+          if (currentUserLocation) {
+            const distance = calculateDistance(
+              currentUserLocation.lat,
+              currentUserLocation.lon,
+              marker.lat,
+              marker.lon
+            ).toFixed(2);
+            label += ` (${distance} ${distanceUnit})`;
+          }
+          const option = document.createElement('option');
+          option.value = `${marker.type}-${marker.typeId}`;
+          option.textContent = label;
+          option.selected = selectedId && `${marker.type}-${marker.typeId}` === selectedId;
+          enemySelect.appendChild(option);
+        });
+        console.log('Marker dropdown updated, options:', enemySelect.options.length);
+      }, 2000);
+
+      const updateBufferLocationDropdown = debounce(() => {
+        console.log('Updating buffer location dropdown, isBufferDropdownOpen:', isBufferDropdownOpen);
+        if (isBufferDropdownOpen) {
+          console.log('Buffer dropdown open, skipping update');
+          return;
+        }
+        const now = Date.now();
+        if (now - lastBufferDropdownUpdate < 2000) {
+          console.log('Too soon since last buffer dropdown update:', now - lastBufferDropdownUpdate);
+          return;
+        }
+        lastBufferDropdownUpdate = now;
+
+        const currentValue = bufferLocation.value;
+        console.log('Preserving buffer dropdown value:', currentValue);
+
+        bufferLocation.innerHTML = '<option value="">Select...</option><option value="self">My Location</option>';
+        markers.forEach(marker => {
+          const option = document.createElement('option');
+          option.value = `${marker.type}-${marker.typeId}`;
+          const displayName = marker.name || `${marker.type.charAt(0).toUpperCase() + marker.type.slice(1)} ${marker.typeId}`;
+          option.textContent = displayName;
+          bufferLocation.appendChild(option);
+        });
+
+        if (currentValue) {
+          const optionExists = Array.from(bufferLocation.options).some(opt => opt.value === currentValue);
+          if (optionExists) {
+            bufferLocation.value = currentValue;
+            console.log('Restored buffer dropdown value:', currentValue);
+          } else {
+            console.log('Previous buffer dropdown value not found, resetting to default');
+            bufferLocation.value = '';
+          }
+        }
+        console.log('Buffer dropdown updated, options:', bufferLocation.options.length);
+      }, 2000);
+
+      function exportCoordinates() {
+        console.log('Exporting coordinates, markers:', markers);
+        const data = markers.map((marker, i) => {
+          const lat = marker.lat;
+          const lon = marker.lon;
+          let mgrs;
+          try { mgrs = proj4.mgrs.forward([lon, lat]); } catch { mgrs = "N/A"; }
+          let distance = "N/A";
+          if (currentUserLocation) {
+            distance = calculateDistance(
+              currentUserLocation.lat,
+              currentUserLocation.lon,
+              lat,
+              lon
+            ).toFixed(2) + ` ${distanceUnit}`;
+          }
+          const displayName = marker.name || `${marker.type.charAt(0).toUpperCase() + marker.type.slice(1)} ${marker.typeId}`;
+          return { id: displayName, lat, lon, mgrs, distance };
+        });
+        const csv = `ID,Latitude,Longitude,MGRS,Distance (${distanceUnit})\n` + data.map(d => `${d.id},${d.lat},${d.lon},${d.mgrs},${d.distance}`).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `marker_coordinates_${distanceUnit}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function toDMS(lat, lon) {
+        function convert(coord, pos, neg) {
+          const absolute = Math.abs(coord);
+          const deg = Math.floor(absolute);
+          const minFloat = (absolute - deg) * 60;
+          const min = Math.floor(minFloat);
+          const sec = ((minFloat - min) * 60).toFixed(2);
+          const dir = coord >= 0 ? pos : neg;
+          return `${deg}°${min}'${sec}" ${dir}`;
+        }
+        return `${convert(lat, "N", "S")}, ${convert(lon, "E", "W")}`;
+      }
+
+      function toUTM(lat, lon) {
+        try {
+          const zone = Math.floor((lon + 180) / 6) + 1;
+          const utmProj = `+proj=utm +zone=${zone} +datum=WGS84 +units=m +no_defs`;
+          const [x, y] = proj4(utmProj, [lon, lat]);
+          return `Zone ${zone}N: ${x.toFixed(2)}mE, ${y.toFixed(2)}mN`;
+        } catch {
+          return "N/A";
+        }
+      }
+
+      async function updateCoordinates(lat, lon, accuracy = null, altitude = null, altitudeAccuracy = null, isGps = false, typeId = null, type = null, markerName = null) {
+        console.log('Updating coordinates:', { lat, lon, accuracy, altitude, altitudeAccuracy, isGps, typeId, type });
+
+        let mgrs;
+        try { mgrs = proj4.mgrs.forward([lon, lat]); } catch { mgrs = "N/A"; }
+
+        let correctedAltitude = lastValidAltitude;
+        let agl = lastValidAGL;
+        let distance = "N/A";
+        let shouldUpdateDropdown = false;
+
+        if (isGps) {
+          // Update GPS accuracy indicator
+          updateGPSAccuracyIndicator(accuracy);
+          
+          if (!lastUserLocation || hasLocationChanged(lat, lon, lastUserLocation.lat, lastUserLocation.lon)) {
+            currentUserLocation = { lat, lon };
+            lastUserLocation = { lat, lon };
+            lastGpsUpdate = Date.now();
+            shouldUpdateDropdown = true;
+
+            if (altitude !== null && altitude !== undefined) {
+              const geoidHeight = getGeoidHeight(lat, lon);
+              console.log('Geoid height:', geoidHeight);
+              if (geoidHeight !== null) {
+                correctedAltitude = altitude - geoidHeight;
+                console.log('Corrected altitude:', correctedAltitude);
+                lastValidAltitude = correctedAltitude;
+
+                try {
+                  const elevation = await getTerrainElevation(lat, lon);
+                  console.log('Terrain elevation:', elevation);
+                  if (elevation !== null && elevation !== undefined) {
+                    agl = correctedAltitude - elevation;
+                    console.log('Calculated AGL:', agl);
+                    if (agl < 0) {
+                      console.warn(`Negative AGL detected: altitude=${altitude}, geoidHeight=${geoidHeight}, elevation=${elevation}, correctedAltitude=${correctedAltitude}, agl=${agl}`);
+                      document.getElementById('errorOutput').textContent = "Warning: Negative AGL detected, set to 0m.";
+                      agl = 0;
+                    }
+                    lastValidAGL = agl;
+                  } else {
+                    console.error('Terrain elevation is null');
+                    document.getElementById('errorOutput').textContent = "Failed to fetch terrain elevation.";
+                  }
+                } catch (error) {
+                  console.error('Error fetching elevation:', error);
+                  document.getElementById('errorOutput').textContent = "Failed to fetch terrain elevation.";
+                }
+              } else {
+                console.error('Geoid height is null');
+                document.getElementById('errorOutput').textContent = "Geoid height unavailable.";
+              }
+            } else {
+              console.warn('Altitude not available from GPS');
+              document.getElementById('errorOutput').textContent = "GPS altitude data not available.";
+            }
+          } else {
+            console.log('Skipping GPS update: location change not significant');
+            return;
+          }
+        } else if (typeId && type) {
+          if (currentUserLocation) {
+            distance = calculateDistance(currentUserLocation.lat, currentUserLocation.lon, lat, lon).toFixed(2) + ` ${distanceUnit}`;
+          }
+          shouldUpdateDropdown = true;
+          correctedAltitude = null;
+          agl = null;
+        }
+
+        document.getElementById('mgrsOutput').textContent = mgrs;
+        document.getElementById('latLonOutput').textContent = `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+        document.getElementById('dmsOutput').textContent = toDMS(lat, lon);
+        document.getElementById('utmOutput').textContent = toUTM(lat, lon);
+        document.getElementById('altitudeOutput').textContent = isGps && correctedAltitude !== null ? `${correctedAltitude.toFixed(1)}m ±${altitudeAccuracy?.toFixed(1) || 'N/A'}m` : "N/A";
+        document.getElementById('aglOutput').textContent = isGps && agl !== null ? `${agl.toFixed(1)}m` : "N/A";
+        document.getElementById('distanceOutput').textContent = distance;
+        document.getElementById('accuracyOutput').textContent = isGps && accuracy ? `±${accuracy.toFixed(1)}m` : "N/A";
+        document.getElementById('timestampOutput').textContent = new Date().toLocaleString();
+
+        if (isGps) {
+          if (gpsMarker) gpsMarker.setLatLng([lat, lon]);
+          else gpsMarker = L.marker([lat, lon], { icon: markerIcons.user }).addTo(map);
+          if (isFirstFix) {
+            const maxZoom = getCurrentBasemapMaxZoom();
+            console.log('First fix zoom:', { lat, lon, zoomLevel: Math.min(15, maxZoom), maxZoom });
+            map.flyTo([lat, lon], Math.min(15, maxZoom));
+            isFirstFix = false;
+          }
+          updateBufferLocationDropdown();
+        } else if (typeId && type && !markers.some(marker => marker.type === type && marker.typeId === typeId)) {
+          const displayName = markerName || `${type.charAt(0).toUpperCase() + type.slice(1)} ${typeId}`;
+          const marker = L.marker([lat, lon], { icon: markerIcons[type] })
+            .bindPopup(displayName)
+            .addTo(markerLayer)
+            .openPopup();
+          markers.push({ typeId, lat, lon, type, marker, name: markerName, leafletMarker: marker });
+          saveMarker(lat, lon, typeId, type, markerName);
+          shouldUpdateDropdown = true;
+          updateBufferLocationDropdown();
+          // Setup measurement click handler for new marker
+          if (typeof setupMarkerClickHandlers === 'function') {
+            setupMarkerClickHandlers();
+          }
+        }
+
+        if (shouldUpdateDropdown) {
+          console.log('Triggering marker dropdown update with selectedId:', typeId ? `${type}-${typeId}` : enemySelect.value);
+          updateMarkerDropdown(typeId ? `${type}-${typeId}` : enemySelect.value);
+        }
+      }
+
+      function throttle(func, wait) {
+        let lastCall = 0;
+        return function (...args) {
+          const now = Date.now();
+          if (now - lastCall >= wait) {
+            lastCall = now;
+            return func(...args);
+          }
+          console.log('Throttled GPS update, time since last call:', now - lastCall);
+        };
+      }
+
+      const throttledUpdateCoordinates = throttle(async (lat, lon, accuracy, altitude, altitudeAccuracy, isGps) => {
+        await updateCoordinates(lat, lon, accuracy, altitude, altitudeAccuracy, isGps);
+      }, 5000);
+
+      function startTracking() {
+        console.log('Starting GPS tracking');
+        watchId = navigator.geolocation.watchPosition(
+          async pos => {
+            console.log('GPS position received:', pos.coords);
+            
+            let heading = null;
+            
+            console.log('GPS coords available:', {
+              heading: pos.coords.heading,
+              speed: pos.coords.speed,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude
+            });
+            
+            // Try to get heading from device first
+            if (pos.coords.heading !== null && pos.coords.heading !== undefined && !isNaN(pos.coords.heading)) {
+              heading = pos.coords.heading;
+              console.log('Device heading:', heading);
+            } else if (lastUserLocation) {
+              // Calculate heading from movement if device doesn't provide it
+              const calculatedHeading = calculateHeadingFromMovement(
+                lastUserLocation.lat,
+                lastUserLocation.lon,
+                pos.coords.latitude,
+                pos.coords.longitude
+              );
+              if (calculatedHeading !== null) {
+                heading = smoothHeading(calculatedHeading);
+                console.log('Calculated heading:', heading);
+              }
+            }
+            
+            console.log('Final heading value:', heading);
+            
+            // Update compass with heading (always call updateCompass)
+            updateCompass(heading);
+            
+            await throttledUpdateCoordinates(
+              pos.coords.latitude,
+              pos.coords.longitude,
+              pos.coords.accuracy,
+              pos.coords.altitude,
+              pos.coords.altitudeAccuracy,
+              true
+            );
+          },
+          err => {
+            console.error('Geolocation error:', err);
+            errorOutput.textContent = err.code === 1 ? "Location access denied by user." : `Error: ${err.message}`;
+            stopTracking();
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+        );
+        isTracking = true;
+        getLocationBtn.textContent = "Stop Tracking";
+        statusOutput.textContent = "Tracking Active";
+      }
+
+      function stopTracking() {
+        console.log('Stopping GPS tracking');
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        isTracking = false;
+        isFirstFix = true;
+        getLocationBtn.textContent = "Start Tracking Location";
+        // Hide GPS accuracy indicator when tracking stops
+        updateGPSAccuracyIndicator(null);
+        // Keep compass visible but reset to default orientation when tracking stops
+        updateCompass(null);
+        if (!map.hasLayer(esriTerrain)) {
+          statusOutput.textContent = "";
+        }
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && isTracking) {
+          console.log('Page hidden, pausing tracking');
+          stopTracking();
+          statusOutput.textContent = "Tracking paused (page not visible)";
+        }
+      });
+
+      getLocationBtn.addEventListener('click', () => {
+        console.log('Location button clicked, isTracking:', isTracking);
+        if (isTracking) { stopTracking(); } else { startTracking(); }
+      });
+
+      selectEnemyBtn.addEventListener('click', () => {
+        console.log('Select Marker button clicked');
+        bufferPanel.classList.remove('active');
+        markerPanel.classList.add('active');
+        selectEnemyBtn.disabled = true;
+      });
+
+      confirmMarkerBtn.addEventListener('click', () => {
+        console.log('Confirm Marker Type button clicked, selected type:', markerType.value);
+        const selectedType = markerType.value;
+        const markerName = document.getElementById('markerName').value.trim();
+        if (!selectedType) {
+          errorOutput.textContent = "Please select a marker type.";
+          return;
+        }
+        markerPanel.classList.remove('active');
+        selectEnemyBtn.disabled = false;
+        map.getContainer().style.cursor = 'crosshair';
+        map.once('click', async e => {
+          console.log('Map clicked for marker:', { latlng: e.latlng, type: selectedType, name: markerName });
+          let typeId;
+          if (selectedType === 'enemy') typeId = ++enemyCounter;
+          else if (selectedType === 'ally') typeId = ++allyCounter;
+          else if (selectedType === 'poi') typeId = ++poiCounter;
+          await updateCoordinates(e.latlng.lat, e.latlng.lng, null, null, null, false, typeId, selectedType, markerName);
+          try {
+            L.Control.Geocoder.nominatim().reverse(
+              L.latLng(e.latlng.lat, e.latlng.lng),
+              map.getZoom(),
+              (result) => {
+                const displayName = markerName || `${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} ${typeId}`;
+                if (result && result.name) {
+                  statusOutput.textContent = `Located: ${displayName} (${result.name})`;
+                } else {
+                  statusOutput.textContent = `Located: ${displayName}`;
+                  console.warn('No place name found for coordinates:', e.latlng.lat, e.latlng.lng);
+                }
+              },
+              (error) => {
+                console.error('Reverse geocoding error:', error);
+                const displayName = markerName || `${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} ${typeId}`;
+                statusOutput.textContent = `Located: ${displayName}`;
+                errorOutput.textContent = "Failed to fetch place name.";
+              }
+            );
+          } catch (error) {
+            console.error('Reverse geocoding failed:', error);
+            const displayName = markerName || `${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} ${typeId}`;
+            statusOutput.textContent = `Located: ${displayName}`;
+            errorOutput.textContent = "Failed to fetch place name.";
+          }
+          map.getContainer().style.cursor = '';
+          // Clear the marker name input for next use
+          document.getElementById('markerName').value = '';
+        });
+      });
+
+      clearEnemyBtn.addEventListener('click', () => {
+        console.log('Clear Markers button clicked');
+        markerLayer.clearLayers();
+        markers = [];
+        enemyCounter = 0;
+        allyCounter = 0;
+        poiCounter = 0;
+        localStorage.removeItem('markers');
+        currentUserLocation = null;
+        lastUserLocation = null;
+        lastValidAltitude = null;
+        lastValidAGL = null;
+        updateMarkerDropdown();
+        updateBufferLocationDropdown();
+        ["mgrsOutput","latLonOutput","dmsOutput","utmOutput","altitudeOutput","aglOutput","distanceOutput","accuracyOutput","timestampOutput"].forEach(id => document.getElementById(id).textContent = "N/A");
+        statusOutput.textContent = "";
+      });
+
+      centerBtn.addEventListener('click', () => {
+        console.log('Center button clicked');
+        if (gpsMarker) {
+          const maxZoom = getCurrentBasemapMaxZoom();
+          console.log('Centering map:', { latlng: gpsMarker.getLatLng(), zoomLevel: Math.min(15, maxZoom), maxZoom });
+          map.flyTo(gpsMarker.getLatLng(), Math.min(15, maxZoom));
+          statusOutput.textContent = isTracking ? "Tracking Active" : "";
+        }
+      });
+
+      exportBtnIn.addEventListener('click', exportCoordinates);
+
+      toggleUnitsBtn.addEventListener('click', () => {
+        console.log('Toggle Units button clicked, current unit:', distanceUnit);
+        distanceUnit = distanceUnit === 'km' ? 'mi' : 'km';
+        toggleUnitsBtn.textContent = `Toggle Units (${distanceUnit === 'km' ? 'mi' : 'km'})`;
+        updateMarkerDropdown(enemySelect.value);
+        if (enemySelect.value && currentUserLocation) {
+          const [type, typeId] = enemySelect.value.split('-');
+          const selectedMarker = markers.find(marker => marker.type === type && marker.typeId == typeId);
+          if (selectedMarker) {
+            document.getElementById('distanceOutput').textContent = calculateDistance(
+              currentUserLocation.lat,
+              currentUserLocation.lon,
+              selectedMarker.lat,
+              selectedMarker.lon
+            ).toFixed(2) + ` ${distanceUnit}`;
+          }
+        }
+      });
+
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          console.log('Copy button clicked for:', btn.dataset.target);
+          const target = document.getElementById(btn.dataset.target);
+          navigator.clipboard.writeText(target.textContent).then(() => {
+            btn.classList.add('copied');
+            btn.textContent = 'Copied';
+            setTimeout(() => {
+              btn.classList.remove('copied');
+              btn.textContent = 'Copy';
+            }, 2000);
+          });
+        });
+      });
+
+      document.getElementById('copyAllBtn').addEventListener('click', () => {
+        console.log('Copy All button clicked');
+        const outputs = [
+          `MGRS: ${document.getElementById('mgrsOutput').textContent}`,
+          `Lat/Long: ${document.getElementById('latLonOutput').textContent}`,
+          `DMS: ${document.getElementById('dmsOutput').textContent}`,
+          `UTM: ${document.getElementById('utmOutput').textContent}`,
+          `Altitude (ASL): ${document.getElementById('altitudeOutput').textContent}`,
+          `Height (AGL): ${document.getElementById('aglOutput').textContent}`,
+          `Distance: ${document.getElementById('distanceOutput').textContent}`,
+          `Accuracy: ${document.getElementById('accuracyOutput').textContent}`,
+          `Last Updated: ${document.getElementById('timestampOutput').textContent}`
+        ].join('\n');
+        navigator.clipboard.writeText(outputs).then(() => {
+          const btn = document.getElementById('copyAllBtn');
+          btn.classList.add('copied');
+          btn.textContent = 'Copied All';
+          setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.textContent = 'Copy All Coordinates';
+          }, 2000);
+        });
+      });
+
+      enemySelect.addEventListener('change', async () => {
+        console.log('Marker select changed, value:', enemySelect.value);
+        const selectedId = enemySelect.value;
+        if (selectedId) {
+          const [type, typeId] = selectedId.split('-');
+          const selectedMarker = markers.find(marker => marker.type === type && marker.typeId == typeId);
+          if (selectedMarker) {
+            await updateCoordinates(selectedMarker.lat, selectedMarker.lon, null, null, null, false, selectedMarker.typeId, selectedMarker.type);
+            const maxZoom = getCurrentBasemapMaxZoom();
+            console.log('Zooming to marker:', { lat: selectedMarker.lat, lon: selectedMarker.lon, zoomLevel: Math.min(15, maxZoom), maxZoom });
+            map.flyTo([selectedMarker.lat, selectedMarker.lon], Math.min(15, maxZoom));
+            try {
+              L.Control.Geocoder.nominatim().reverse(
+                L.latLng(selectedMarker.lat, selectedMarker.lon),
+                map.getZoom(),
+                (result) => {
+                  if (result && result.name) {
+                    statusOutput.textContent = `Located: ${selectedMarker.type.charAt(0).toUpperCase() + selectedMarker.type.slice(1)} ${selectedMarker.typeId} (${result.name})`;
+                  } else {
+                    statusOutput.textContent = `Located: ${selectedMarker.type.charAt(0).toUpperCase() + selectedMarker.type.slice(1)} ${selectedMarker.typeId}`;
+                    console.warn('No place name found for coordinates:', selectedMarker.lat, selectedMarker.lon);
+                  }
+                },
+                (error) => {
+                  console.error('Reverse geocoding error:', error);
+                  statusOutput.textContent = `Located: ${selectedMarker.type.charAt(0).toUpperCase() + selectedMarker.type.slice(1)} ${selectedMarker.typeId}`;
+                  errorOutput.textContent = "Failed to fetch place name.";
+                }
+              );
+            } catch (error) {
+              console.error('Reverse geocoding failed:', error);
+              statusOutput.textContent = `Located: ${selectedMarker.type.charAt(0).toUpperCase() + selectedMarker.type.slice(1)} ${selectedMarker.typeId}`;
+              errorOutput.textContent = "Failed to fetch place name.";
+            }
+          } else {
+            console.error('Selected marker not found:', selectedId);
+            document.getElementById('errorOutput').textContent = "Selected marker not found.";
+            statusOutput.textContent = "";
+          }
+        } else {
+          console.log('No marker selected, clearing outputs');
+          ["mgrsOutput","latLonOutput","dmsOutput","utmOutput","altitudeOutput","aglOutput","distanceOutput","accuracyOutput","timestampOutput"].forEach(id => document.getElementById(id).textContent = "N/A");
+          statusOutput.textContent = isTracking ? "Tracking Active" : "";
+        }
+      });
+
+      // Toolbar functionality
+      toggleToolbarBtn.addEventListener('click', () => {
+        console.log('Toggle button clicked, current hidden state:', toolbar.classList.contains('hidden'));
+        toolbar.classList.toggle('hidden');
+        showToolbarBtn.style.display = toolbar.classList.contains('hidden') ? 'block' : 'none';
+      });
+
+      showToolbarBtn.addEventListener('click', () => {
+        console.log('Show toolbar button clicked');
+        toolbar.classList.remove('hidden');
+        showToolbarBtn.style.display = 'none';
+      });
+
+      createBufferBtn.addEventListener('click', () => {
+        bufferPanel.classList.toggle('active');
+        markerPanel.classList.remove('active');
+        selectEnemyBtn.disabled = false;
+      });
+
+      bufferOpacity.addEventListener('input', () => {
+        opacityValue.textContent = bufferOpacity.value;
+      });
+
+      function zoomToBuffer(lat, lon, radiusInMeters) {
+        const earthRadius = 6371000;
+        const latDelta = (radiusInMeters / earthRadius) * (180 / Math.PI);
+        const lonDelta = latDelta / Math.cos(lat * Math.PI / 180);
+        const bounds = L.latLngBounds(
+          [lat - latDelta, lon - lonDelta],
+          [lat + latDelta, lon + lonDelta]
+        );
+        const maxZoom = getCurrentBasemapMaxZoom();
+        map.fitBounds(bounds, { maxZoom: Math.min(15, maxZoom) });
+      }
+
+      applyBufferBtn.addEventListener('click', () => {
+        const selected = bufferLocation.value;
+        const radiusValue = parseFloat(bufferRadius.value);
+        const unit = bufferUnit.value;
+        const opacity = parseFloat(bufferOpacity.value);
+        const color = bufferColor.value;
+
+        if (!selected || isNaN(radiusValue) || radiusValue <= 0) {
+          errorOutput.textContent = "Please select a location and enter a valid radius.";
+          return;
+        }
+
+        let lat, lon, label;
+        if (selected === 'self') {
+          if (!currentUserLocation) {
+            errorOutput.textContent = "No current location available.";
+            return;
+          }
+          lat = currentUserLocation.lat;
+          lon = currentUserLocation.lon;
+          label = `My Location: ${radiusValue} ${unit}`;
+        } else {
+          const [type, typeId] = selected.split('-');
+          const marker = markers.find(m => m.type === type && m.typeId == typeId);
+          if (!marker) {
+            errorOutput.textContent = "Selected location not found.";
+            return;
+          }
+          lat = marker.lat;
+          lon = marker.lon;
+          label = `${marker.type.charAt(0).toUpperCase() + marker.type.slice(1)} ${marker.typeId}: ${radiusValue} ${unit}`;
+        }
+
+        let radiusInMeters;
+        if (unit === 'm') {
+          radiusInMeters = radiusValue;
+        } else if (unit === 'km') {
+          radiusInMeters = radiusValue * 1000;
+        } else if (unit === 'mi') {
+          radiusInMeters = radiusValue * 1609.34;
+        }
+
+        const buffer = L.circle([lat, lon], {
+          color: color,
+          fillColor: color,
+          fillOpacity: opacity,
+          radius: radiusInMeters
+        }).bindPopup(label).addTo(bufferLayer);
+
+        zoomToBuffer(lat, lon, radiusInMeters);
+        statusOutput.textContent = `Buffer added: ${label}`;
+        bufferPanel.classList.remove('active');
+        bufferRadius.value = '';
+        bufferLocation.value = '';
+        bufferColor.value = 'green';
+      });
+
+      clearBuffersBtn.addEventListener('click', () => {
+        bufferLayer.clearLayers();
+        statusOutput.textContent = "Buffers cleared.";
+      });
+
+      console.log('Initializing markers');
+      loadMarkers();
+      // Initialize show button visibility on load
+      showToolbarBtn.style.display = toolbar.classList.contains('hidden') ? 'block' : 'none';
+
+      // Tutorial/Onboarding System
+      const tutorialOverlay = document.getElementById('tutorialOverlay');
+      const helpBtn = document.getElementById('helpBtn');
+      const tutorialClose = document.getElementById('tutorialClose');
+      const tutorialNext = document.getElementById('tutorialNext');
+      const tutorialPrev = document.getElementById('tutorialPrev');
+      const tutorialSkip = document.getElementById('tutorialSkip');
+      const tutorialDots = document.querySelectorAll('.tutorial-dot');
+      const tutorialSteps = document.querySelectorAll('.tutorial-step');
+      
+      let currentTutorialStep = 1;
+      const totalTutorialSteps = 8;
+      let hasSeenTutorial = localStorage.getItem('geotrace_tutorial_completed') === 'true';
+      
+      // Check if this is the first visit
+      if (!hasSeenTutorial) {
+        // Show tutorial automatically on first visit after a short delay
+        setTimeout(() => {
+          showTutorial();
+        }, 2000);
+      }
+      
+      function showTutorial() {
+        tutorialOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        updateTutorialNavigation();
+      }
+      
+      function hideTutorial() {
+        tutorialOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        // Mark tutorial as completed
+        localStorage.setItem('geotrace_tutorial_completed', 'true');
+        hasSeenTutorial = true;
+      }
+      
+      function goToTutorialStep(step) {
+        if (step < 1 || step > totalTutorialSteps) return;
+        
+        // Hide all steps
+        tutorialSteps.forEach(s => s.classList.remove('active'));
+        tutorialDots.forEach(d => d.classList.remove('active'));
+        
+        // Show current step
+        document.getElementById(`step${step}`).classList.add('active');
+        document.querySelector(`[data-step="${step}"]`).classList.add('active');
+        
+        currentTutorialStep = step;
+        updateTutorialNavigation();
+      }
+      
+      function updateTutorialNavigation() {
+        // Update Previous button
+        tutorialPrev.disabled = currentTutorialStep === 1;
+        
+        // Update Next button
+        if (currentTutorialStep === totalTutorialSteps) {
+          tutorialNext.innerHTML = 'Finish <i class="fas fa-check"></i>';
+        } else {
+          tutorialNext.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+        }
+        
+        // Show/hide Skip button on first step
+        tutorialSkip.style.display = currentTutorialStep === 1 ? 'block' : 'none';
+      }
+      
+      function nextTutorialStep() {
+        if (currentTutorialStep < totalTutorialSteps) {
+          goToTutorialStep(currentTutorialStep + 1);
+        } else {
+          hideTutorial();
+        }
+      }
+      
+      function prevTutorialStep() {
+        if (currentTutorialStep > 1) {
+          goToTutorialStep(currentTutorialStep - 1);
+        }
+      }
+      
+      // Event listeners for tutorial
+      helpBtn.addEventListener('click', showTutorial);
+      tutorialClose.addEventListener('click', hideTutorial);
+      tutorialNext.addEventListener('click', nextTutorialStep);
+      tutorialPrev.addEventListener('click', prevTutorialStep);
+      tutorialSkip.addEventListener('click', hideTutorial);
+      
+      // Click on progress dots
+      tutorialDots.forEach(dot => {
+        dot.addEventListener('click', () => {
+          const step = parseInt(dot.dataset.step);
+          goToTutorialStep(step);
+        });
+      });
+      
+      // Close tutorial on overlay click (but not modal click)
+      tutorialOverlay.addEventListener('click', (e) => {
+        if (e.target === tutorialOverlay) {
+          hideTutorial();
+        }
+      });
+      
+      // Keyboard navigation for tutorial
+      document.addEventListener('keydown', (e) => {
+        if (!tutorialOverlay.classList.contains('active')) return;
+        
+        switch (e.key) {
+          case 'Escape':
+            hideTutorial();
+            break;
+          case 'ArrowRight':
+          case ' ':
+            e.preventDefault();
+            nextTutorialStep();
+            break;
+          case 'ArrowLeft':
+            e.preventDefault();
+            prevTutorialStep();
+            break;
+        }
+      });
+      
+      // Add keyboard shortcuts for main app
+      document.addEventListener('keydown', (e) => {
+        if (tutorialOverlay.classList.contains('active')) return;
+        
+        switch (e.key) {
+          case ' ':
+            e.preventDefault();
+            if (isTracking) {
+              stopTracking();
+            } else {
+              startTracking();
+            }
+            break;
+          case 'Escape':
+            // Cancel marker placement if active
+            if (map.getContainer().style.cursor === 'crosshair') {
+              map.getContainer().style.cursor = '';
+              markerPanel.classList.remove('active');
+              selectEnemyBtn.disabled = false;
+            }
+            break;
+        }
+      });
+      
+      // Add tooltips for better UX
+      const tooltipElements = [
+        { element: getLocationBtn, text: 'Start/Stop GPS tracking' },
+        { element: selectEnemyBtn, text: 'Place markers on the map' },
+        { element: clearEnemyBtn, text: 'Remove all markers' },
+        { element: centerBtn, text: 'Center map on your location' },
+        { element: exportBtnIn, text: 'Export marker data as CSV' },
+        { element: toggleUnitsBtn, text: 'Switch between km and miles' }
+      ];
+      
+      tooltipElements.forEach(({ element, text }) => {
+        element.title = text;
+      });
+      
+      console.log('Tutorial system initialized');
+      
+      // Measurement System
+      const startMeasurementBtn = document.getElementById('startMeasurementBtn');
+      const clearMeasurementsBtn = document.getElementById('clearMeasurementsBtn');
+      const measurementInfo = document.getElementById('measurementInfo');
+      const currentDistanceSpan = document.getElementById('currentDistance');
+      const pointCountSpan = document.getElementById('pointCount');
+      const markerSnapIndicator = document.getElementById('markerSnapIndicator');
+      const measurementTooltip = document.getElementById('measurementTooltip');
+      
+      let isMeasurementMode = false;
+      let measurementPoints = [];
+      let measurementLines = [];
+      let measurementLabels = [];
+      let measurementPointMarkers = [];
+      let currentMeasurementLine = null;
+      let currentMeasurementLabel = null;
+      
+      // Initialize measurement system
+      function initMeasurementSystem() {
+        startMeasurementBtn.addEventListener('click', toggleMeasurementMode);
+        clearMeasurementsBtn.addEventListener('click', clearAllMeasurements);
+        
+        // Add map click handler for measurements
+        map.on('click', handleMapClick);
+        map.on('mousemove', handleMapMouseMove);
+        
+        // Add marker click handlers for direct marker selection
+        setupMarkerClickHandlers();
+      }
+      
+      function setupMarkerClickHandlers() {
+        console.log('Setting up marker click handlers for', markers.length, 'markers');
+        // Add click handlers to all existing markers
+        markers.forEach(marker => {
+          const leafletMarker = marker.leafletMarker || marker.marker;
+          if (leafletMarker) {
+            console.log('Adding click handler to marker:', marker.name || `${marker.type} ${marker.typeId}`);
+            leafletMarker.off('click.measurement'); // Remove any existing handlers
+            leafletMarker.on('click.measurement', (e) => {
+              console.log('Marker clicked in measurement mode:', isMeasurementMode);
+              if (isMeasurementMode) {
+                e.originalEvent.stopPropagation(); // Prevent map click
+                e.originalEvent.preventDefault(); // Prevent default behavior
+                const markerLatLng = leafletMarker.getLatLng();
+                console.log('Adding measurement point at marker:', markerLatLng);
+                addMeasurementPoint(markerLatLng);
+                updateStatus(`Added point at: ${marker.name || `${marker.type} ${marker.typeId}`}`, 'success');
+              } else {
+                console.log('Measurement mode not active, ignoring marker click');
+              }
+            });
+          }
+        });
+      }
+      
+      function toggleMeasurementMode() {
+        isMeasurementMode = !isMeasurementMode;
+        
+        if (isMeasurementMode) {
+          startMeasurementBtn.classList.add('active');
+          startMeasurementBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Measurement';
+          measurementInfo.style.display = 'block';
+          map.getContainer().style.cursor = 'crosshair';
+          updateStatus('Measurement mode active - Click directly on markers for exact points or map for custom points', 'info');
+          // Ensure all markers have click handlers when measurement mode starts
+          setupMarkerClickHandlers();
+        } else {
+          startMeasurementBtn.classList.remove('active');
+          startMeasurementBtn.innerHTML = '<i class="fas fa-play"></i> Start Measurement';
+          measurementInfo.style.display = 'none';
+          map.getContainer().style.cursor = '';
+          clearStatus();
+          finishCurrentMeasurement();
+        }
+      }
+      
+      function handleMapClick(e) {
+        if (!isMeasurementMode) return;
+        
+        // Only add points from direct map clicks (not marker clicks)
+        addMeasurementPoint(e.latlng);
+      }
+      
+      function handleMapMouseMove(e) {
+        if (!isMeasurementMode) return;
+        
+        // Hide tooltip - no snapping/locking functionality
+        measurementTooltip.style.display = 'none';
+      }
+      
+      function getDistance(latlng1, latlng2) {
+        return latlng1.distanceTo(latlng2);
+      }
+      
+      function addMeasurementPoint(latlng) {
+        measurementPoints.push(latlng);
+        
+        // Create measurement point marker
+        const pointMarker = L.circleMarker(latlng, {
+          radius: 6,
+          fillColor: '#00ff9f',
+          color: '#0a192f',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 1,
+          className: 'measurement-point'
+        }).addTo(map);
+        
+        // Track the point marker for clearing
+        measurementPointMarkers.push(pointMarker);
+        
+        // Add point number label
+        const pointLabel = L.marker(latlng, {
+          icon: L.divIcon({
+            html: `<div style="background: rgba(0,0,0,0.8); color: #00ff9f; padding: 2px 6px; border-radius: 3px; font-size: 12px; font-weight: bold; border: 1px solid #00ff9f;">${measurementPoints.length}</div>`,
+            className: 'measurement-label',
+            iconSize: [30, 15],
+            iconAnchor: [15, 7]
+          })
+        }).addTo(map);
+        
+        measurementLabels.push(pointLabel);
+        
+        // Draw line to previous point
+        if (measurementPoints.length > 1) {
+          const prevPoint = measurementPoints[measurementPoints.length - 2];
+          const line = L.polyline([prevPoint, latlng], {
+            color: '#00ff9f',
+            weight: 3,
+            opacity: 0.8,
+            dashArray: '5, 5',
+            className: 'measurement-line'
+          }).addTo(map);
+          
+          measurementLines.push(line);
+          
+          // Add distance label
+          const distance = getDistance(prevPoint, latlng);
+          const midPoint = L.latLng(
+            (prevPoint.lat + latlng.lat) / 2,
+            (prevPoint.lng + latlng.lng) / 2
+          );
+          
+          const distanceLabel = L.marker(midPoint, {
+            icon: L.divIcon({
+              html: `<div style="background: rgba(0,0,0,0.9); color: #00ff9f; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid #00ff9f; white-space: nowrap;">${formatDistance(distance)}</div>`,
+              className: 'measurement-label',
+              iconSize: [60, 20],
+              iconAnchor: [30, 10]
+            })
+          }).addTo(map);
+          
+          measurementLabels.push(distanceLabel);
+        }
+        
+        updateMeasurementStats();
+      }
+      
+      function updateMeasurementStats() {
+        pointCountSpan.textContent = measurementPoints.length;
+        
+        if (measurementPoints.length > 1) {
+          let totalDistance = 0;
+          for (let i = 1; i < measurementPoints.length; i++) {
+            totalDistance += getDistance(measurementPoints[i-1], measurementPoints[i]);
+          }
+          currentDistanceSpan.textContent = formatDistance(totalDistance);
+        } else {
+          currentDistanceSpan.textContent = '0 m';
+        }
+        
+        clearMeasurementsBtn.disabled = measurementPoints.length === 0;
+      }
+      
+      function formatDistance(distance) {
+        if (distance < 1000) {
+          return `${Math.round(distance)} m`;
+        } else {
+          return `${(distance / 1000).toFixed(2)} km`;
+        }
+      }
+      
+      function clearAllMeasurements() {
+        // Remove all measurement elements from map
+        measurementLines.forEach(line => {
+          if (map.hasLayer(line)) {
+            map.removeLayer(line);
+          }
+        });
+        
+        measurementLabels.forEach(label => {
+          if (map.hasLayer(label)) {
+            map.removeLayer(label);
+          }
+        });
+        
+        measurementPointMarkers.forEach(marker => {
+          if (map.hasLayer(marker)) {
+            map.removeLayer(marker);
+          }
+        });
+        
+        // Clear all arrays
+        measurementPoints = [];
+        measurementLines = [];
+        measurementLabels = [];
+        measurementPointMarkers = [];
+        
+        // Reset UI
+        updateMeasurementStats();
+        measurementInfo.style.display = 'none';
+        clearMeasurementsBtn.disabled = true;
+        
+        // Hide any active indicators
+        measurementTooltip.style.display = 'none';
+        
+        updateStatus('All measurements cleared', 'success');
+      }
+      
+      function finishCurrentMeasurement() {
+        if (measurementPoints.length > 1) {
+          const totalDistance = measurementPoints.reduce((total, point, index) => {
+            if (index === 0) return 0;
+            return total + getDistance(measurementPoints[index-1], point);
+          }, 0);
+          
+          updateStatus(`Measurement complete: ${formatDistance(totalDistance)} (${measurementPoints.length} points)`, 'success');
+        }
+      }
+      
+
+      
+      // Initialize measurement system
+      initMeasurementSystem();
+      console.log('Measurement system initialized');
+    });
+  </script>
+</body>
+</html>
