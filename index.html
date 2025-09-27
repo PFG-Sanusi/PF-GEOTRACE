@@ -6,7 +6,8 @@
   <meta name="theme-color" content="#0a192f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>PF - GEOTRACE</title>
+  <meta name="description" content="PF - GEOTRACE: Advanced anti-jamming GPS tracking system with real-time signal monitoring, jamming detection, and fallback positioning for military and tactical applications.">
+  <title>PF - GEOTRACE | Anti-Jamming GPS Tracking</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
@@ -468,6 +469,7 @@
       z-index: 1;
       text-align: center;
     }
+    
     #map {
       height: 65vh;
       max-height: 600px;
@@ -1051,13 +1053,13 @@
         height: 50vh;
       }
       #gpsAccuracyIndicator {
-        left: 10px;
+        left: 1px;
         padding: 8px 12px;
         font-size: 0.8em;
         min-width: 100px;
       }
              #compassWidget {
-         right: 10px;
+         right: 1px;
          bottom: 70px;
          width: 60px;
          height: 60px;
@@ -1127,13 +1129,13 @@
         max-width: 200px;
       }
       #gpsAccuracyIndicator {
-        left: 8px;
+        left: 1px;
         padding: 6px 10px;
         font-size: 0.75em;
         min-width: 90px;
       }
              #compassWidget {
-         right: 8px;
+         right: 1px;
          bottom: 60px;
          width: 50px;
          height: 50px;
@@ -1190,7 +1192,7 @@
     /* GPS Accuracy Indicator */
     #gpsAccuracyIndicator {
       position: absolute;
-      left: 20px;
+      left: 1px;
       top: 50%;
       transform: translateY(-50%);
       background: rgba(30, 46, 30, 0.9);
@@ -1232,10 +1234,125 @@
       color: #00ff9f;
     }
 
+    /* Anti-Jamming Indicators */
+    #jammingIndicator, #signalQualityIndicator {
+      position: absolute;
+      background: rgba(30, 46, 30, 0.9);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      min-width: 100px;
+      text-align: center;
+      z-index: 1000;
+    }
+
+    #jammingIndicator {
+      top: 50%;
+      right: 1px;
+      transform: translateY(-50%);
+    }
+
+    #signalQualityIndicator {
+      top: 50%;
+      right: 1px;
+      transform: translateY(50%);
+    }
+
+    /* Jamming Level Indicators */
+    .jamming-indicator.level-0 {
+      border-color: #00ff9f;
+      color: #00ff9f;
+      box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+    }
+
+    .jamming-indicator.level-1 {
+      border-color: #ffaa00;
+      color: #ffaa00;
+      box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+    }
+
+    .jamming-indicator.level-2 {
+      border-color: #ff6600;
+      color: #ff6600;
+      box-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
+    }
+
+    .jamming-indicator.level-3 {
+      border-color: #ff0000;
+      color: #ff0000;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+      animation: pulse 1s infinite;
+    }
+
+    /* Signal Quality Indicators */
+    .signal-quality.level-0 {
+      border-color: #ff0000;
+      color: #ff0000;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+    }
+
+    .signal-quality.level-1 {
+      border-color: #ff6600;
+      color: #ff6600;
+      box-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
+    }
+
+    .signal-quality.level-2 {
+      border-color: #ffaa00;
+      color: #ffaa00;
+      box-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
+    }
+
+    .signal-quality.level-3 {
+      border-color: #00ff9f;
+      color: #00ff9f;
+      box-shadow: 0 0 10px rgba(0, 255, 159, 0.3);
+    }
+
+    .signal-quality.level-4 {
+      border-color: #00ff9f;
+      color: #00ff9f;
+      box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* Mobile Responsive for Anti-Jamming Indicators */
+    @media (max-width: 768px) {
+      #jammingIndicator, #signalQualityIndicator {
+        padding: 6px 10px;
+        font-size: 0.8em;
+        min-width: 90px;
+      }
+      
+      #jammingIndicator {
+        top: 50%;
+        right: 1px;
+        transform: translateY(-50%);
+      }
+      
+      #signalQualityIndicator {
+        top: 50%;
+        right: 1px;
+        transform: translateY(50%);
+      }
+    }
+
          /* Compass Widget */
      #compassWidget {
        position: absolute;
-       right: 20px;
+       right: 1px;
        bottom: 80px;
        width: 80px;
        height: 80px;
@@ -1360,6 +1477,16 @@
         <div class="accuracy-value">±0m</div>
         <div class="accuracy-label">GPS Accuracy</div>
       </div>
+      
+      <!-- Anti-Jamming Indicators -->
+      <div id="jammingIndicator" class="jamming-indicator level-0">
+        GPS OK
+      </div>
+      
+      <div id="signalQualityIndicator" class="signal-quality level-0">
+        0%
+      </div>
+      
              <div id="compassWidget">
         <div class="compass-rose">
           <div class="compass-direction compass-north">N</div>
@@ -1506,6 +1633,7 @@
             <strong>What you'll learn:</strong>
             <ul>
               <li>GPS tracking and location monitoring</li>
+              <li>Anti-jamming protection and signal monitoring</li>
               <li>Marker placement and management</li>
               <li>Precision measurement tool</li>
               <li>Buffer creation and analysis</li>
@@ -1524,7 +1652,7 @@
       <div id="step2" class="tutorial-step">
         <h3><i class="fas fa-map-marker-alt tutorial-step-icon"></i>GPS Location Tracking</h3>
         <div class="tutorial-content">
-          <p>The core feature of GEOTRACE is real-time GPS tracking. Here's how to get started:</p>
+          <p>The core feature of GEOTRACE is real-time GPS tracking with advanced anti-jamming protection. Here's how to get started:</p>
           
           <ul>
             <li><strong>Start Tracking:</strong> Click the "Start Tracking Location" button to begin GPS monitoring</li>
@@ -1544,13 +1672,69 @@
               <li>Altitude and AGL (Above Ground Level) calculations</li>
               <li>Movement tracking and heading detection</li>
               <li>Accuracy monitoring and feedback</li>
+              <li>Anti-jamming protection and signal monitoring</li>
+              <li>Automatic fallback positioning when GPS fails</li>
             </ul>
           </div>
         </div>
       </div>
 
-      <!-- Step 3: Marker System -->
+      <!-- Step 3: Anti-Jamming Protection -->
       <div id="step3" class="tutorial-step">
+        <h3><i class="fas fa-shield-alt tutorial-step-icon"></i>Anti-Jamming Protection</h3>
+        <div class="tutorial-content">
+          <p>GEOTRACE features advanced anti-jamming protection to maintain positioning accuracy even in challenging environments:</p>
+          
+          <div class="tutorial-feature-list">
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-signal"></i></div>
+              <div class="tutorial-feature-title">Signal Quality Monitor</div>
+              <div class="tutorial-feature-desc">Real-time signal strength indicator (0-100%)</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-exclamation-triangle"></i></div>
+              <div class="tutorial-feature-title">Jamming Detection</div>
+              <div class="tutorial-feature-desc">Automatic detection of GPS interference</div>
+            </div>
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-sync-alt"></i></div>
+              <div class="tutorial-feature-title">Fallback Positioning</div>
+              <div class="tutorial-feature-desc">Network and IP-based positioning when GPS fails</div>
+            </div>
+          </div>
+          
+          <div class="tutorial-highlight">
+            <strong>Anti-Jamming Indicators:</strong>
+            <ul>
+              <li><strong>GPS OK (Green):</strong> Normal GPS operation</li>
+              <li><strong>LOW JAM (Yellow):</strong> Minor interference detected</li>
+              <li><strong>MED JAM (Orange):</strong> Moderate jamming detected</li>
+              <li><strong>HIGH JAM (Red):</strong> Severe jamming - fallback active</li>
+            </ul>
+          </div>
+          
+          <div class="tutorial-highlight">
+            <strong>Signal Quality Levels:</strong>
+            <ul>
+              <li><strong>0-25% (Red):</strong> Very poor signal</li>
+              <li><strong>25-50% (Orange):</strong> Poor signal</li>
+              <li><strong>50-75% (Yellow):</strong> Fair signal</li>
+              <li><strong>75-100% (Green):</strong> Excellent signal</li>
+            </ul>
+          </div>
+          
+          <div class="tutorial-tip">
+            <i class="fas fa-lightbulb"></i> <strong>Pro Tip:</strong> When jamming is detected, the system automatically switches to fallback positioning methods to maintain your location tracking.
+          </div>
+          
+          <div class="tutorial-warning">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Security Note:</strong> Anti-jamming protection helps maintain positioning accuracy in challenging environments, but always verify critical coordinates through multiple sources when possible.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Marker System -->
+      <div id="step4" class="tutorial-step">
         <h3><i class="fas fa-crosshairs tutorial-step-icon"></i>Marker Placement System</h3>
         <div class="tutorial-content">
           <p>GEOTRACE uses a sophisticated marker system for point-of-interest tracking:</p>
@@ -1588,8 +1772,8 @@
         </div>
       </div>
 
-      <!-- Step 4: Measurement Tool -->
-      <div id="step4" class="tutorial-step">
+      <!-- Step 5: Measurement Tool -->
+      <div id="step5" class="tutorial-step">
         <h3><i class="fas fa-ruler tutorial-step-icon"></i>Precision Measurement Tool</h3>
         <div class="tutorial-content">
           <p>The Measurement Tool allows you to create precise distance measurements between points on the map:</p>
@@ -1640,8 +1824,8 @@
         </div>
       </div>
 
-      <!-- Step 5: Buffer System -->
-      <div id="step5" class="tutorial-step">
+      <!-- Step 6: Buffer System -->
+      <div id="step6" class="tutorial-step">
         <h3><i class="fas fa-draw-polygon tutorial-step-icon"></i>Buffer Creation & Analysis</h3>
         <div class="tutorial-content">
           <p>Create circular buffers around any location for area analysis and planning:</p>
@@ -1669,8 +1853,8 @@
         </div>
       </div>
 
-      <!-- Step 6: Coordinate Systems -->
-      <div id="step6" class="tutorial-step">
+      <!-- Step 7: Coordinate Systems -->
+      <div id="step7" class="tutorial-step">
         <h3><i class="fas fa-globe tutorial-step-icon"></i>Coordinate Systems & Conversions</h3>
         <div class="tutorial-content">
           <p>GEOTRACE supports multiple coordinate systems for maximum compatibility:</p>
@@ -1708,8 +1892,8 @@
         </div>
       </div>
 
-      <!-- Step 7: Advanced Features -->
-      <div id="step7" class="tutorial-step">
+      <!-- Step 8: Advanced Features -->
+      <div id="step8" class="tutorial-step">
         <h3><i class="fas fa-cogs tutorial-step-icon"></i>Advanced Features & Tips</h3>
         <div class="tutorial-content">
           <p>Master these advanced features to maximize your GEOTRACE experience:</p>
@@ -1720,6 +1904,8 @@
             <li><strong>Toolbar:</strong> Access advanced tools via the collapsible sidebar</li>
             <li><strong>Export Data:</strong> Download marker coordinates as CSV files</li>
             <li><strong>Unit Toggle:</strong> Switch between metric and imperial units</li>
+            <li><strong>Anti-Jamming:</strong> Monitor signal quality and jamming status in real-time</li>
+            <li><strong>Fallback Positioning:</strong> Automatic network/IP positioning when GPS fails</li>
           </ul>
           
           <div class="tutorial-highlight">
@@ -1737,8 +1923,8 @@
         </div>
       </div>
 
-      <!-- Step 8: Getting Started -->
-      <div id="step8" class="tutorial-step">
+      <!-- Step 9: Getting Started -->
+      <div id="step9" class="tutorial-step">
         <h3><i class="fas fa-play tutorial-step-icon"></i>Ready to Start</h3>
         <div class="tutorial-content">
           <p>You're now ready to use GEOTRACE effectively! Here's a quick checklist to get started:</p>
@@ -1748,6 +1934,7 @@
             <ol>
               <li>Allow location access when prompted</li>
               <li>Click "Start Tracking Location" to begin GPS monitoring</li>
+              <li>Monitor the anti-jamming indicators (GPS OK/Signal Quality)</li>
               <li>Familiarize yourself with the coordinate display panel</li>
               <li>Try placing a marker to test the system</li>
               <li>Test the measurement tool for distance calculations</li>
@@ -1774,6 +1961,7 @@
         <div class="tutorial-dot" data-step="6"></div>
         <div class="tutorial-dot" data-step="7"></div>
         <div class="tutorial-dot" data-step="8"></div>
+        <div class="tutorial-dot" data-step="9"></div>
       </div>
 
       <div class="tutorial-navigation">
@@ -1983,6 +2171,257 @@
       let lastBufferDropdownUpdate = 0;
       let lastHeading = null;
       let headingHistory = [];
+
+      // Anti-Jamming System Variables
+      let signalQuality = {
+        strength: 0,
+        satellites: 0,
+        hdop: 0,
+        vdop: 0,
+        pdop: 0,
+        lastUpdate: 0
+      };
+      
+      let positionHistory = [];
+      let jammingDetected = false;
+      let jammingLevel = 0; // 0 = none, 1 = low, 2 = medium, 3 = high
+      let adaptiveTimeout = {
+        base: 10000,
+        max: 30000,
+        increment: 5000,
+        current: 10000
+      };
+      
+      let fallbackPositioning = {
+        networkBased: false,
+        ipGeolocation: false,
+        manualEntry: false
+      };
+
+      // Anti-Jamming Functions
+      function monitorSignalQuality(coords) {
+        const quality = {
+          accuracy: coords.accuracy,
+          altitudeAccuracy: coords.altitudeAccuracy,
+          heading: coords.heading,
+          speed: coords.speed,
+          timestamp: coords.timestamp
+        };
+        
+        // Calculate signal strength based on accuracy
+        signalQuality.strength = Math.max(0, Math.min(100, (100 - (coords.accuracy / 10))));
+        signalQuality.lastUpdate = Date.now();
+        
+        return quality;
+      }
+
+      function detectJamming(positionHistory, currentPosition) {
+        if (positionHistory.length < 3) return false;
+        
+        const recent = positionHistory.slice(-3);
+        const current = currentPosition;
+        
+        // Check for sudden position jumps (spoofing detection)
+        const maxReasonableSpeed = 200; // km/h
+        const maxReasonableAcceleration = 50; // m/s²
+        
+        for (let i = 0; i < recent.length - 1; i++) {
+          const distance = calculateDistance(
+            recent[i].lat, recent[i].lon,
+            recent[i + 1].lat, recent[i + 1].lon
+          ) * 1000; // Convert to meters
+          
+          const timeDiff = (recent[i + 1].timestamp - recent[i].timestamp) / 1000; // seconds
+          const speed = distance / timeDiff; // m/s
+          
+          if (speed > maxReasonableSpeed * 0.277778) { // Convert km/h to m/s
+            console.warn('Unrealistic speed detected:', speed * 3.6, 'km/h');
+            return true;
+          }
+        }
+        
+        // Check for impossible accuracy values
+        if (currentPosition.accuracy > 1000 || currentPosition.accuracy < 1) {
+          console.warn('Suspicious accuracy value:', currentPosition.accuracy);
+          return true;
+        }
+        
+        // Check for signal degradation
+        if (signalQuality.strength < 30) {
+          console.warn('Low signal strength detected:', signalQuality.strength);
+          return true;
+        }
+        
+        return false;
+      }
+
+      function validatePosition(lat, lon, accuracy, previousPos) {
+        // Check for reasonable accuracy values
+        if (accuracy > 1000 || accuracy < 0) {
+          console.warn('Invalid accuracy value:', accuracy);
+          return false;
+        }
+        
+        // Check for valid coordinate ranges
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+          console.warn('Invalid coordinates:', lat, lon);
+          return false;
+        }
+        
+        // Check for impossible jumps if we have previous position
+        if (previousPos) {
+          const distance = calculateDistance(lat, lon, previousPos.lat, previousPos.lon) * 1000;
+          const timeDiff = (Date.now() - previousPos.timestamp) / 1000;
+          const speed = distance / timeDiff;
+          
+          // Allow for reasonable movement (up to 200 km/h)
+          if (speed > 55.56) { // 200 km/h in m/s
+            console.warn('Unrealistic movement detected:', speed * 3.6, 'km/h');
+            return false;
+          }
+        }
+        
+        return true;
+      }
+
+      function updateJammingStatus(detected, level) {
+        jammingDetected = detected;
+        jammingLevel = level;
+        
+        // Update UI indicators
+        const jammingIndicator = document.getElementById('jammingIndicator');
+        if (jammingIndicator) {
+          jammingIndicator.className = `jamming-indicator level-${level}`;
+          jammingIndicator.textContent = level === 0 ? 'GPS OK' : 
+                                       level === 1 ? 'LOW JAM' : 
+                                       level === 2 ? 'MED JAM' : 'HIGH JAM';
+        }
+        
+        // Update signal quality indicator
+        const signalIndicator = document.getElementById('signalQualityIndicator');
+        if (signalIndicator) {
+          signalIndicator.className = `signal-quality level-${Math.floor(signalQuality.strength / 25)}`;
+          signalIndicator.textContent = `${Math.round(signalQuality.strength)}%`;
+        }
+      }
+
+      function adaptiveTimeoutManagement(success) {
+        if (success) {
+          // Reset timeout on successful position fix
+          adaptiveTimeout.current = adaptiveTimeout.base;
+        } else {
+          // Increase timeout on failure
+          adaptiveTimeout.current = Math.min(
+            adaptiveTimeout.current + adaptiveTimeout.increment,
+            adaptiveTimeout.max
+          );
+        }
+        
+        console.log('Adaptive timeout updated:', adaptiveTimeout.current);
+        return adaptiveTimeout.current;
+      }
+
+      function getNetworkPosition() {
+        return new Promise((resolve, reject) => {
+          // Try to get position from network sources
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  lat: position.coords.latitude,
+                  lon: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  source: 'network'
+                });
+              },
+              (error) => {
+                reject(error);
+              },
+              {
+                enableHighAccuracy: false,
+                timeout: 15000,
+                maximumAge: 60000
+              }
+            );
+          } else {
+            reject(new Error('Geolocation not supported'));
+          }
+        });
+      }
+
+      function getIPPosition() {
+        return fetch('https://ipapi.co/json/')
+          .then(response => response.json())
+          .then(data => ({
+            lat: data.latitude,
+            lon: data.longitude,
+            accuracy: 10000, // IP geolocation is less accurate
+            source: 'ip'
+          }))
+          .catch(error => {
+            console.error('IP geolocation failed:', error);
+            throw error;
+          });
+      }
+
+      async function tryFallbackPositioning() {
+        console.log('Attempting fallback positioning methods');
+        
+        try {
+          // Try network-based positioning first
+          const networkPos = await getNetworkPosition();
+          console.log('Network position obtained:', networkPos);
+          
+          // Update position with fallback data
+          await updateCoordinates(
+            networkPos.lat,
+            networkPos.lon,
+            networkPos.accuracy,
+            null,
+            null,
+            false
+          );
+          
+          // Update status
+          document.getElementById('statusOutput').textContent = 
+            `Fallback positioning active (${networkPos.source})`;
+          
+          fallbackPositioning.networkBased = true;
+          
+        } catch (networkError) {
+          console.warn('Network positioning failed:', networkError);
+          
+          try {
+            // Try IP geolocation as last resort
+            const ipPos = await getIPPosition();
+            console.log('IP position obtained:', ipPos);
+            
+            // Update position with IP data
+            await updateCoordinates(
+              ipPos.lat,
+              ipPos.lon,
+              ipPos.accuracy,
+              null,
+              null,
+              false
+            );
+            
+            // Update status
+            document.getElementById('statusOutput').textContent = 
+              `IP geolocation active (${ipPos.source})`;
+            
+            fallbackPositioning.ipGeolocation = true;
+            
+          } catch (ipError) {
+            console.error('All fallback methods failed:', ipError);
+            document.getElementById('errorOutput').textContent = 
+              'GPS jammed - All positioning methods failed. Manual entry required.';
+            
+            // Show manual entry option
+            fallbackPositioning.manualEntry = true;
+          }
+        }
+      }
 
       const markerIcons = {
         enemy: new L.Icon({
@@ -2594,10 +3033,73 @@
       }, 5000);
 
       function startTracking() {
-        console.log('Starting GPS tracking');
+        console.log('Starting GPS tracking with anti-jamming protection');
+        
+        // Reset anti-jamming variables
+        jammingDetected = false;
+        jammingLevel = 0;
+        positionHistory = [];
+        adaptiveTimeout.current = adaptiveTimeout.base;
+        
         watchId = navigator.geolocation.watchPosition(
           async pos => {
             console.log('GPS position received:', pos.coords);
+            
+            // Monitor signal quality
+            const quality = monitorSignalQuality(pos.coords);
+            
+            // Create current position object for validation
+            const currentPosition = {
+              lat: pos.coords.latitude,
+              lon: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              timestamp: Date.now()
+            };
+            
+            // Validate position
+            const isValidPosition = validatePosition(
+              currentPosition.lat, 
+              currentPosition.lon, 
+              currentPosition.accuracy, 
+              lastUserLocation
+            );
+            
+            if (!isValidPosition) {
+              console.warn('Invalid position detected, attempting fallback positioning');
+              tryFallbackPositioning();
+              return;
+            }
+            
+            // Add to position history for jamming detection
+            positionHistory.push(currentPosition);
+            if (positionHistory.length > 10) {
+              positionHistory.shift(); // Keep only last 10 positions
+            }
+            
+            // Detect jamming
+            const jammingDetected = detectJamming(positionHistory, currentPosition);
+            let jammingLevel = 0;
+            
+            if (jammingDetected) {
+              if (signalQuality.strength < 20) {
+                jammingLevel = 3; // High jamming
+              } else if (signalQuality.strength < 40) {
+                jammingLevel = 2; // Medium jamming
+              } else {
+                jammingLevel = 1; // Low jamming
+              }
+              
+              console.warn('Jamming detected, level:', jammingLevel);
+              
+              // Try fallback positioning
+              tryFallbackPositioning();
+            } else {
+              // Reset adaptive timeout on successful fix
+              adaptiveTimeoutManagement(true);
+            }
+            
+            // Update jamming status indicators
+            updateJammingStatus(jammingDetected, jammingLevel);
             
             let heading = null;
             
@@ -2605,7 +3107,10 @@
               heading: pos.coords.heading,
               speed: pos.coords.speed,
               latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude
+              longitude: pos.coords.longitude,
+              jammingDetected,
+              jammingLevel,
+              signalStrength: signalQuality.strength
             });
             
             // Try to get heading from device first
@@ -2642,10 +3147,27 @@
           },
           err => {
             console.error('Geolocation error:', err);
-            errorOutput.textContent = err.code === 1 ? "Location access denied by user." : `Error: ${err.message}`;
-            stopTracking();
+            
+            // Update adaptive timeout on failure
+            adaptiveTimeoutManagement(false);
+            
+            // Try fallback positioning on GPS failure
+            if (err.code === 3) { // TIMEOUT
+              console.log('GPS timeout, attempting fallback positioning');
+              tryFallbackPositioning();
+            } else if (err.code === 1) {
+              errorOutput.textContent = "Location access denied by user.";
+              stopTracking();
+            } else {
+              errorOutput.textContent = `GPS Error: ${err.message}. Attempting fallback...`;
+              tryFallbackPositioning();
+            }
           },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+          { 
+            enableHighAccuracy: true, 
+            timeout: adaptiveTimeout.current, 
+            maximumAge: 5000 
+          }
         );
         isTracking = true;
         getLocationBtn.textContent = "Stop Tracking";
@@ -2659,6 +3181,19 @@
         isTracking = false;
         isFirstFix = true;
         getLocationBtn.textContent = "Start Tracking Location";
+        
+        // Reset anti-jamming indicators
+        updateJammingStatus(false, 0);
+        positionHistory = [];
+        jammingDetected = false;
+        jammingLevel = 0;
+        adaptiveTimeout.current = adaptiveTimeout.base;
+        
+        // Reset fallback positioning flags
+        fallbackPositioning.networkBased = false;
+        fallbackPositioning.ipGeolocation = false;
+        fallbackPositioning.manualEntry = false;
+        
         // Hide GPS accuracy indicator when tracking stops
         updateGPSAccuracyIndicator(null);
         // Keep compass visible but reset to default orientation when tracking stops
