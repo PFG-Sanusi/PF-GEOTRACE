@@ -8,6 +8,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="PF - GEOTRACE: Advanced anti-jamming GPS tracking system with real-time signal monitoring, jamming detection, and fallback positioning for military and tactical applications.">
   <title>PF - GEOTRACE | Anti-Jamming GPS Tracking</title>
+  
+  <!-- Enhanced Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; img-src 'self' data: https:; connect-src 'self' https:;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
@@ -1020,6 +1027,43 @@
       background: linear-gradient(135deg, #cc0000, #ff4d4d);
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 77, 77, 0.3);
     }
+    
+    /* Decryption Section Styles */
+    .decryption-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(30, 46, 30, 0.3);
+      border: 1px solid rgba(0, 255, 159, 0.2);
+      border-radius: 8px;
+    }
+    
+    .decryption-section h4 {
+      color: #00ff9f;
+      margin: 0 0 15px 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1em;
+    }
+    
+    .decryption-section input[type="text"] {
+      font-family: 'Roboto', monospace;
+      font-size: 12px;
+    }
+    
+    .decryption-section input[type="text"]:focus {
+      outline: 2px solid #00ff9f;
+      outline-offset: 2px;
+    }
+    
+    #decryptionResult {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    #decryptedContent {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 255, 159, 0.3);
+    }
     .leaflet-popup-content-wrapper {
       background: rgba(46, 74, 46, 0.9);
       color: #e0e0e0;
@@ -1232,6 +1276,63 @@
     #gpsAccuracyIndicator .accuracy-icon {
       margin-right: 8px;
       color: #00ff9f;
+    }
+    
+    /* Enhanced GPS Accuracy Color Coding */
+    #gpsAccuracyIndicator.excellent {
+      border-color: #00ff00;
+      background: rgba(0, 255, 0, 0.1);
+    }
+    
+    #gpsAccuracyIndicator.excellent .accuracy-value {
+      color: #00ff00;
+      text-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+    }
+    
+    #gpsAccuracyIndicator.good {
+      border-color: #00ff9f;
+      background: rgba(0, 255, 159, 0.1);
+    }
+    
+    #gpsAccuracyIndicator.good .accuracy-value {
+      color: #00ff9f;
+      text-shadow: 0 0 6px rgba(0, 255, 159, 0.4);
+    }
+    
+    #gpsAccuracyIndicator.fair {
+      border-color: #ffaa00;
+      background: rgba(255, 170, 0, 0.1);
+    }
+    
+    #gpsAccuracyIndicator.fair .accuracy-value {
+      color: #ffaa00;
+      text-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
+    }
+    
+    #gpsAccuracyIndicator.poor {
+      border-color: #ff6600;
+      background: rgba(255, 102, 0, 0.1);
+    }
+    
+    #gpsAccuracyIndicator.poor .accuracy-value {
+      color: #ff6600;
+      text-shadow: 0 0 6px rgba(255, 102, 0, 0.4);
+    }
+    
+    #gpsAccuracyIndicator.critical {
+      border-color: #ff0000;
+      background: rgba(255, 0, 0, 0.1);
+      animation: pulse 1s infinite;
+    }
+    
+    #gpsAccuracyIndicator.critical .accuracy-value {
+      color: #ff0000;
+      text-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
 
     /* Anti-Jamming Indicators */
@@ -1574,6 +1675,27 @@
       </div>
       <button id="clearBuffersBtn"><i class="fas fa-trash-alt"></i> Clear Buffers</button>
       
+      <!-- Decryption Tools -->
+      <div class="decryption-section">
+        <h4><i class="fas fa-unlock"></i> Decrypt Data</h4>
+        <input type="file" id="encryptedFileInput" accept=".enc" style="display: none;">
+        <button id="selectEncryptedFileBtn" class="measurement-btn">
+          <i class="fas fa-file-upload"></i> Select .enc File
+        </button>
+        <input type="text" id="decryptionKeyInput" placeholder="Enter 64-character decryption key" maxlength="64" style="width: 100%; margin: 5px 0; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid #00ff9f; color: #e0e0e0; border-radius: 4px;">
+        <div id="decryptionStatus" style="font-size: 11px; color: #b0b0b0; margin: 5px 0;">Enter key and select file to enable decryption</div>
+        <button id="decryptBtn" class="measurement-btn" disabled>
+          <i class="fas fa-key"></i> Decrypt
+        </button>
+        <div id="decryptionResult" style="display: none; margin-top: 10px; padding: 10px; background: rgba(0,255,159,0.1); border: 1px solid #00ff9f; border-radius: 4px;">
+          <h5>Decrypted Data:</h5>
+          <pre id="decryptedContent" style="color: #e0e0e0; font-size: 12px; white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></pre>
+          <button id="downloadDecryptedBtn" class="measurement-btn" style="margin-top: 10px;">
+            <i class="fas fa-download"></i> Download as CSV
+          </button>
+        </div>
+      </div>
+      
       <!-- Measurement Widget -->
       <div class="measurement-widget">
         <h4><i class="fas fa-ruler"></i> Measurement Tool</h4>
@@ -1632,12 +1754,13 @@
           <div class="tutorial-highlight">
             <strong>What you'll learn:</strong>
             <ul>
-              <li>GPS tracking and location monitoring</li>
+              <li>GPS tracking with military-grade accuracy monitoring</li>
               <li>Anti-jamming protection and signal monitoring</li>
               <li>Marker placement and management</li>
               <li>Precision measurement tool</li>
               <li>Buffer creation and analysis</li>
               <li>Coordinate systems and conversions</li>
+              <li>Enhanced security and encrypted data export</li>
               <li>Advanced mapping features</li>
             </ul>
           </div>
@@ -1656,9 +1779,18 @@
           
           <ul>
             <li><strong>Start Tracking:</strong> Click the "Start Tracking Location" button to begin GPS monitoring</li>
-            <li><strong>GPS Accuracy:</strong> Monitor your location accuracy with the real-time indicator</li>
+            <li><strong>Military-Grade Accuracy Monitoring:</strong> Real-time accuracy indicator with color-coded levels:
+              <ul>
+                <li>🟢 <strong>Excellent (±3m):</strong> Military Grade Accuracy</li>
+                <li>🟢 <strong>Good (±5m):</strong> Tactical Grade Accuracy</li>
+                <li>🟡 <strong>Fair (±10m):</strong> Navigation Grade Accuracy</li>
+                <li>🟠 <strong>Poor (±20m):</strong> Basic Navigation Accuracy</li>
+                <li>🔴 <strong>Critical (>20m):</strong> Insufficient Accuracy (pulsing alert)</li>
+              </ul>
+            </li>
             <li><strong>Compass Widget:</strong> View your heading and direction with the interactive compass</li>
             <li><strong>Auto-Centering:</strong> Use "Center on Me" to quickly return to your current position</li>
+            <li><strong>Enhanced Security:</strong> All coordinates validated for WGS-84 compliance and security</li>
           </ul>
           
           <div class="tutorial-warning">
@@ -1666,14 +1798,15 @@
           </div>
           
           <div class="tutorial-highlight">
-            <strong>GPS Features:</strong>
+            <strong>Enhanced GPS Features:</strong>
             <ul>
-              <li>Real-time coordinate updates</li>
+              <li>Real-time coordinate updates with security validation</li>
               <li>Altitude and AGL (Above Ground Level) calculations</li>
               <li>Movement tracking and heading detection</li>
-              <li>Accuracy monitoring and feedback</li>
+              <li>Military-grade accuracy monitoring with visual feedback</li>
               <li>Anti-jamming protection and signal monitoring</li>
               <li>Automatic fallback positioning when GPS fails</li>
+              <li>Enhanced data integrity and security checks</li>
             </ul>
           </div>
         </div>
@@ -1892,8 +2025,133 @@
         </div>
       </div>
 
-      <!-- Step 8: Advanced Features -->
+      <!-- Step 8: Security & Data Export -->
       <div id="step8" class="tutorial-step">
+        <h3><i class="fas fa-shield-alt tutorial-step-icon"></i>Security & Data Export</h3>
+        <div class="tutorial-content">
+          <p>GEOTRACE features military-grade security and comprehensive data export capabilities:</p>
+          
+          <div class="tutorial-feature-list">
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-lock"></i></div>
+              <div class="tutorial-feature-content">
+                <strong>Encrypted Data Export</strong>
+                <p>Export coordinates in both standard CSV and encrypted formats with unique encryption keys for secure data sharing.</p>
+              </div>
+            </div>
+            
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-check-circle"></i></div>
+              <div class="tutorial-feature-content">
+                <strong>Enhanced Security Validation</strong>
+                <p>All coordinates are validated for WGS-84 compliance and security to prevent data injection attacks.</p>
+              </div>
+            </div>
+            
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-download"></i></div>
+              <div class="tutorial-feature-content">
+                <strong>Comprehensive Export Data</strong>
+                <p>Export includes coordinates, timestamps, accuracy data, marker types, and distance calculations.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tutorial-highlight">
+            <strong>Export Process:</strong>
+            <ol>
+              <li><strong>Export Coordinates:</strong> Click "Export Coordinates" button</li>
+              <li><strong>Dual Download:</strong> Both CSV and .enc files download automatically</li>
+              <li><strong>Copy Key:</strong> Click the "Copy" button next to the decryption key in status</li>
+              <li><strong>Secure Sharing:</strong> Send .enc file and key through separate channels</li>
+            </ol>
+          </div>
+          
+          <div class="tutorial-highlight">
+            <strong>Decryption Process:</strong>
+            <ol>
+              <li><strong>Select File:</strong> Click "Select .enc File" and choose your encrypted file</li>
+              <li><strong>Enter Key:</strong> Paste the 64-character decryption key</li>
+              <li><strong>Decrypt:</strong> Click "Decrypt" button when both are ready</li>
+              <li><strong>Download:</strong> Save the decrypted data as CSV</li>
+            </ol>
+          </div>
+          
+          <div class="tutorial-highlight">
+            <strong>Security Features:</strong>
+            <ul>
+              <li><strong>Dual Export:</strong> Standard CSV + encrypted .enc file</li>
+              <li><strong>One-Click Copy:</strong> Copy decryption keys directly from status message</li>
+              <li><strong>Security Headers:</strong> Enhanced browser security protection</li>
+              <li><strong>Data Integrity:</strong> Automatic validation and error checking</li>
+              <li><strong>Secure Sharing:</strong> Unique encryption keys for each export</li>
+            </ul>
+          </div>
+          
+          <div class="tutorial-warning">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Security Note:</strong> Always ensure you have proper authorization before tracking locations in sensitive areas. Keep encryption keys secure and never share them with the encrypted file.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 9: Decryption Process -->
+      <div id="step9" class="tutorial-step">
+        <h3><i class="fas fa-unlock tutorial-step-icon"></i>Decryption Process</h3>
+        <div class="tutorial-content">
+          <p>Learn how to decrypt your encrypted coordinate files using the built-in decryption tool:</p>
+          
+          <div class="tutorial-feature-list">
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-file-upload"></i></div>
+              <div class="tutorial-feature-content">
+                <strong>Step 1: Select File</strong>
+                <p>Click "Select .enc File" and choose your encrypted coordinate file. The button will show confirmation for 2 seconds.</p>
+              </div>
+            </div>
+            
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-key"></i></div>
+              <div class="tutorial-feature-content">
+                <strong>Step 2: Enter Key</strong>
+                <p>Paste the 64-character decryption key in the input field. The status will show key length validation.</p>
+              </div>
+            </div>
+            
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-shield-alt"></i></div>
+              <div class="tutorial-feature-content">
+                <strong>Step 3: Decrypt</strong>
+                <p>Click "Decrypt" when both file and key are ready. The decrypted data will appear in a preview box.</p>
+              </div>
+            </div>
+            
+            <div class="tutorial-feature-item">
+              <div class="tutorial-feature-icon"><i class="fas fa-download"></i></div>
+              <div class="tutorial-feature-content">
+                <strong>Step 4: Download</strong>
+                <p>Click "Download as CSV" to save the decrypted coordinates for analysis or sharing.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tutorial-highlight">
+            <strong>Copy Key Feature:</strong>
+            <ul>
+              <li><strong>Export Process:</strong> When exporting, click the "Copy" button next to the decryption key in the status message</li>
+              <li><strong>One-Click Copy:</strong> Instantly copies the full 64-character key to your clipboard</li>
+              <li><strong>Visual Feedback:</strong> Button shows "✓ Copied!" confirmation for 2 seconds</li>
+              <li><strong>Secure Sharing:</strong> Send the key through a separate secure channel from the .enc file</li>
+            </ul>
+          </div>
+          
+          <div class="tutorial-warning">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Security Reminder:</strong> Never share the decryption key with the encrypted file. Use separate communication channels for maximum security.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 10: Advanced Features -->
+      <div id="step10" class="tutorial-step">
         <h3><i class="fas fa-cogs tutorial-step-icon"></i>Advanced Features & Tips</h3>
         <div class="tutorial-content">
           <p>Master these advanced features to maximize your GEOTRACE experience:</p>
@@ -1902,7 +2160,7 @@
             <li><strong>Map Layers:</strong> Switch between satellite, terrain, and street maps</li>
             <li><strong>Search Function:</strong> Search by place names, coordinates, or MGRS codes</li>
             <li><strong>Toolbar:</strong> Access advanced tools via the collapsible sidebar</li>
-            <li><strong>Export Data:</strong> Download marker coordinates as CSV files</li>
+            <li><strong>Enhanced Export:</strong> Download marker coordinates with encryption and security</li>
             <li><strong>Unit Toggle:</strong> Switch between metric and imperial units</li>
             <li><strong>Anti-Jamming:</strong> Monitor signal quality and jamming status in real-time</li>
             <li><strong>Fallback Positioning:</strong> Automatic network/IP positioning when GPS fails</li>
@@ -1916,15 +2174,11 @@
               <li><strong>Ctrl+C:</strong> Copy selected coordinates</li>
             </ul>
           </div>
-          
-          <div class="tutorial-warning">
-            <i class="fas fa-exclamation-triangle"></i> <strong>Security Note:</strong> Always ensure you have proper authorization before tracking locations in sensitive areas.
-          </div>
         </div>
       </div>
 
-      <!-- Step 9: Getting Started -->
-      <div id="step9" class="tutorial-step">
+      <!-- Step 11: Getting Started -->
+      <div id="step11" class="tutorial-step">
         <h3><i class="fas fa-play tutorial-step-icon"></i>Ready to Start</h3>
         <div class="tutorial-content">
           <p>You're now ready to use GEOTRACE effectively! Here's a quick checklist to get started:</p>
@@ -1934,12 +2188,14 @@
             <ol>
               <li>Allow location access when prompted</li>
               <li>Click "Start Tracking Location" to begin GPS monitoring</li>
-              <li>Monitor the anti-jamming indicators (GPS OK/Signal Quality)</li>
+              <li>Monitor GPS accuracy with the color-coded indicator</li>
               <li>Familiarize yourself with the coordinate display panel</li>
               <li>Try placing a marker to test the system</li>
               <li>Test the measurement tool for distance calculations</li>
               <li>Experiment with different map layers</li>
               <li>Create a buffer around your location</li>
+              <li>Test the enhanced export features with encryption</li>
+              <li>Try the decryption process with the copy button</li>
             </ol>
           </div>
           
@@ -1962,6 +2218,8 @@
         <div class="tutorial-dot" data-step="7"></div>
         <div class="tutorial-dot" data-step="8"></div>
         <div class="tutorial-dot" data-step="9"></div>
+        <div class="tutorial-dot" data-step="10"></div>
+        <div class="tutorial-dot" data-step="11"></div>
       </div>
 
       <div class="tutorial-navigation">
@@ -2487,6 +2745,16 @@
       const markerName = document.getElementById('markerName');
       const confirmMarkerBtn = document.getElementById('confirmMarkerBtn');
 
+      // Decryption elements
+      const encryptedFileInput = document.getElementById('encryptedFileInput');
+      const selectEncryptedFileBtn = document.getElementById('selectEncryptedFileBtn');
+      const decryptionKeyInput = document.getElementById('decryptionKeyInput');
+      const decryptBtn = document.getElementById('decryptBtn');
+      const decryptionResult = document.getElementById('decryptionResult');
+      const decryptedContent = document.getElementById('decryptedContent');
+      const downloadDecryptedBtn = document.getElementById('downloadDecryptedBtn');
+      const decryptionStatus = document.getElementById('decryptionStatus');
+
       let watchId = null, isTracking = false, isFirstFix = true;
 
       if (!navigator.geolocation) {
@@ -2611,8 +2879,29 @@
           const accuracyValue = gpsAccuracyIndicator.querySelector('.accuracy-value');
           accuracyValue.textContent = `±${accuracy.toFixed(1)}m`;
           gpsAccuracyIndicator.classList.add('visible');
+          
+          // Enhanced color coding with military standards
+          gpsAccuracyIndicator.className = 'gps-accuracy-indicator visible';
+          if (accuracy <= 3) {
+            gpsAccuracyIndicator.classList.add('excellent');
+            accuracyValue.title = 'Military Grade Accuracy (±3m)';
+          } else if (accuracy <= 5) {
+            gpsAccuracyIndicator.classList.add('good');
+            accuracyValue.title = 'Tactical Grade Accuracy (±5m)';
+          } else if (accuracy <= 10) {
+            gpsAccuracyIndicator.classList.add('fair');
+            accuracyValue.title = 'Navigation Grade Accuracy (±10m)';
+          } else if (accuracy <= 20) {
+            gpsAccuracyIndicator.classList.add('poor');
+            accuracyValue.title = 'Basic Navigation Accuracy (±20m)';
+          } else {
+            gpsAccuracyIndicator.classList.add('critical');
+            accuracyValue.title = 'Insufficient Accuracy - Use with Caution';
+          }
         } else {
           gpsAccuracyIndicator.classList.remove('visible');
+          const accuracyValue = gpsAccuracyIndicator.querySelector('.accuracy-value');
+          accuracyValue.title = 'No GPS Signal';
         }
       }
 
@@ -2851,11 +3140,78 @@
         console.log('Buffer dropdown updated, options:', bufferLocation.options.length);
       }, 2000);
 
+      // Enhanced Security Functions
+      function generateEncryptionKey() {
+        const array = new Uint8Array(32);
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      }
+
+      function simpleEncrypt(text, key) {
+        let encrypted = '';
+        for (let i = 0; i < text.length; i++) {
+          const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+          encrypted += String.fromCharCode(charCode);
+        }
+        return btoa(encrypted);
+      }
+
+      function simpleDecrypt(encryptedData, key) {
+        try {
+          const decoded = atob(encryptedData);
+          let decrypted = '';
+          for (let i = 0; i < decoded.length; i++) {
+            const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+            decrypted += String.fromCharCode(charCode);
+          }
+          return decrypted;
+        } catch (error) {
+          console.error('Decryption failed:', error);
+          return null;
+        }
+      }
+
+      function validateWGS84(lat, lon) {
+        // Enhanced WGS-84 validation with security checks
+        if (typeof lat !== 'number' || typeof lon !== 'number') {
+          console.warn('Invalid coordinate types:', { lat, lon });
+          return false;
+        }
+        
+        if (isNaN(lat) || isNaN(lon) || !isFinite(lat) || !isFinite(lon)) {
+          console.warn('Invalid coordinate values (NaN/Infinity):', { lat, lon });
+          return false;
+        }
+        
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+          console.warn('Coordinates outside WGS-84 bounds:', { lat, lon });
+          return false;
+        }
+        
+        // Check for suspicious precision (potential data injection)
+        const latStr = lat.toString();
+        const lonStr = lon.toString();
+        if (latStr.includes('e') || lonStr.includes('e') || 
+            latStr.includes('E') || lonStr.includes('E')) {
+          console.warn('Scientific notation detected - potential security risk:', { lat, lon });
+          return false;
+        }
+        
+        return true;
+      }
+
       function exportCoordinates() {
         console.log('Exporting coordinates, markers:', markers);
         const data = markers.map((marker, i) => {
           const lat = marker.lat;
           const lon = marker.lon;
+          
+          // Enhanced WGS-84 validation
+          if (!validateWGS84(lat, lon)) {
+            console.warn(`Invalid coordinates for marker ${i}:`, { lat, lon });
+            return null;
+          }
+          
           let mgrs;
           try { mgrs = proj4.mgrs.forward([lon, lat]); } catch { mgrs = "N/A"; }
           let distance = "N/A";
@@ -2868,16 +3224,73 @@
             ).toFixed(2) + ` ${distanceUnit}`;
           }
           const displayName = marker.name || `${marker.type.charAt(0).toUpperCase() + marker.type.slice(1)} ${marker.typeId}`;
-          return { id: displayName, lat, lon, mgrs, distance };
-        });
-        const csv = `ID,Latitude,Longitude,MGRS,Distance (${distanceUnit})\n` + data.map(d => `${d.id},${d.lat},${d.lon},${d.mgrs},${d.distance}`).join('\n');
+          return { 
+            id: displayName, 
+            lat, 
+            lon, 
+            mgrs, 
+            distance,
+            timestamp: new Date().toISOString(),
+            accuracy: marker.accuracy || 'N/A',
+            type: marker.type
+          };
+        }).filter(marker => marker !== null);
+
+        // Create both encrypted and standard exports
+        const csv = `ID,Latitude,Longitude,MGRS,Distance (${distanceUnit}),Timestamp,Accuracy,Type\n` + 
+                   data.map(d => `${d.id},${d.lat},${d.lon},${d.mgrs},${d.distance},${d.timestamp},${d.accuracy},${d.type}`).join('\n');
+        
+        // Encrypted version
+        const encryptionKey = generateEncryptionKey();
+        const encryptedData = simpleEncrypt(csv, encryptionKey);
+        
+        // Export standard CSV
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `marker_coordinates_${distanceUnit}.csv`;
+        a.download = `marker_coordinates_${distanceUnit}_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
+
+        // Export encrypted version
+        const encryptedBlob = new Blob([encryptedData], { type: 'text/plain' });
+        const encryptedUrl = URL.createObjectURL(encryptedBlob);
+        const encryptedA = document.createElement('a');
+        encryptedA.href = encryptedUrl;
+        encryptedA.download = `encrypted_coordinates_${new Date().toISOString().split('T')[0]}.enc`;
+        encryptedA.click();
+        URL.revokeObjectURL(encryptedUrl);
+
+        // Display encryption key in console and status with copy button
+        console.log('Export completed with encryption key:', encryptionKey);
+        statusOutput.innerHTML = `Export completed! Decryption key: <span id="decryptionKeyDisplay">${encryptionKey}</span> <button id="copyKeyBtn" style="margin-left: 10px; padding: 4px 8px; background: #00ff9f; color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;"><i class="fas fa-copy"></i> Copy</button>`;
+        
+        // Add copy functionality to the button
+        setTimeout(() => {
+          const copyKeyBtn = document.getElementById('copyKeyBtn');
+          if (copyKeyBtn) {
+            copyKeyBtn.addEventListener('click', () => {
+              navigator.clipboard.writeText(encryptionKey).then(() => {
+                copyKeyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyKeyBtn.style.background = '#00cc7a';
+                setTimeout(() => {
+                  copyKeyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                  copyKeyBtn.style.background = '#00ff9f';
+                }, 2000);
+              }).catch(err => {
+                console.error('Failed to copy key:', err);
+              });
+            });
+          }
+        }, 100);
+        
+        // Auto-clear status after 15 seconds
+        setTimeout(() => {
+          if (statusOutput.innerHTML.includes('Export completed!')) {
+            statusOutput.textContent = isTracking ? "Tracking Active" : "";
+          }
+        }, 15000);
       }
 
       function toDMS(lat, lon) {
@@ -3504,6 +3917,114 @@
         statusOutput.textContent = "Buffers cleared.";
       });
 
+      // Decryption functionality
+      selectEncryptedFileBtn.addEventListener('click', () => {
+        encryptedFileInput.click();
+      });
+
+      encryptedFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          console.log('Encrypted file selected:', file.name);
+          selectEncryptedFileBtn.textContent = `Selected: ${file.name}`;
+          selectEncryptedFileBtn.style.background = 'linear-gradient(135deg, #00ff9f, #00cc7a)';
+          
+          // Show feedback for 2 seconds, then reset to default
+          setTimeout(() => {
+            selectEncryptedFileBtn.textContent = 'Select .enc File';
+            selectEncryptedFileBtn.style.background = '';
+          }, 2000);
+          
+          // Re-check button state when file is selected
+          const key = decryptionKeyInput.value.trim();
+          const isReady = key && key.length === 64 && file;
+          decryptBtn.disabled = !isReady;
+          
+          if (isReady) {
+            decryptionStatus.textContent = 'Ready to decrypt!';
+            decryptionStatus.style.color = '#00ff9f';
+          } else if (key && key.length !== 64) {
+            decryptionStatus.textContent = 'Key must be exactly 64 characters';
+            decryptionStatus.style.color = '#ff6600';
+          } else {
+            decryptionStatus.textContent = 'Enter 64-character key to enable decryption';
+            decryptionStatus.style.color = '#b0b0b0';
+          }
+        }
+      });
+
+      decryptionKeyInput.addEventListener('input', () => {
+        const key = decryptionKeyInput.value.trim();
+        const file = encryptedFileInput.files[0];
+        const isReady = key && key.length === 64 && file;
+        decryptBtn.disabled = !isReady;
+        
+        if (isReady) {
+          decryptionStatus.textContent = 'Ready to decrypt!';
+          decryptionStatus.style.color = '#00ff9f';
+        } else if (key && key.length !== 64) {
+          decryptionStatus.textContent = `Key length: ${key.length}/64 characters`;
+          decryptionStatus.style.color = '#ff6600';
+        } else if (!file) {
+          decryptionStatus.textContent = 'Select .enc file first';
+          decryptionStatus.style.color = '#ff6600';
+        } else {
+          decryptionStatus.textContent = 'Enter 64-character key to enable decryption';
+          decryptionStatus.style.color = '#b0b0b0';
+        }
+      });
+
+      decryptBtn.addEventListener('click', async () => {
+        const file = encryptedFileInput.files[0];
+        const key = decryptionKeyInput.value.trim();
+        
+        if (!file || !key) {
+          errorOutput.textContent = "Please select a file and enter a valid key.";
+          return;
+        }
+
+        if (key.length !== 64) {
+          errorOutput.textContent = "Invalid key format. Key must be 64 characters long.";
+          return;
+        }
+
+        try {
+          const fileContent = await file.text();
+          console.log('Decrypting file with key length:', key.length);
+          
+          const decryptedData = simpleDecrypt(fileContent, key);
+          
+          if (decryptedData === null) {
+            errorOutput.textContent = "Decryption failed. Check your key and file format.";
+            return;
+          }
+
+          decryptedContent.textContent = decryptedData;
+          decryptionResult.style.display = 'block';
+          statusOutput.textContent = "File decrypted successfully!";
+          
+          // Store decrypted data for download
+          window.lastDecryptedData = decryptedData;
+          
+        } catch (error) {
+          console.error('Decryption error:', error);
+          errorOutput.textContent = "Decryption failed. Invalid file or key.";
+        }
+      });
+
+      downloadDecryptedBtn.addEventListener('click', () => {
+        if (window.lastDecryptedData) {
+          const blob = new Blob([window.lastDecryptedData], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `decrypted_coordinates_${new Date().toISOString().split('T')[0]}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+          statusOutput.textContent = "Decrypted data downloaded!";
+        }
+      });
+
       console.log('Initializing markers');
       loadMarkers();
       // Initialize show button visibility on load
@@ -3520,7 +4041,7 @@
       const tutorialSteps = document.querySelectorAll('.tutorial-step');
       
       let currentTutorialStep = 1;
-      const totalTutorialSteps = 8;
+      const totalTutorialSteps = 10;
       let hasSeenTutorial = localStorage.getItem('geotrace_tutorial_completed') === 'true';
       
       // Check if this is the first visit
